@@ -8,7 +8,7 @@ UPDATE:
 
 1. Install a fusionpbx  normally on different instance or VPS
 2. Deploy and follow Opentelecom's provisioner until the section "Create phone make, family and model details" Note that postgresql client must be installed with curl, python3 and PHP 5 or 7.2
-3. Download 'script-otf-api-phones.php' and execute it under '<FUSIONPBX-WEBROOT>/resources/templates/provision'
+3. Download 'script-otf-api-phones.php' and execute it under FUSIONPBX-WEBROOT/resources/templates/provision'
 4. The returned output will give a set of links to be executed instead of the OpenTelecom's section (as per, step 2).
 5. Follow the instructions like "Test the provisioner" and skip the crossbar.devices and the rest of the page
 6. Go to fusionpbx >> Advanced >> Default settings >> provisioner section >> set 'enabled' with value 'true' >> grandstream_config_url to https://<fusionpbx-host>/app/provision/
