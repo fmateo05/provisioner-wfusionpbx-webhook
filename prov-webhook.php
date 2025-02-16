@@ -45,7 +45,8 @@ $document = shell_exec($command_dev);
 
 $result_dev = json_decode($document,true);
   
-	
+
+//file_put_contents('/var/www/html/webhook-data.log',print_r($result_dev));	
 
 
 $account = $account_id;
@@ -65,7 +66,7 @@ $request_data_device  = $result_dev;
 $user = 'fusionpbx';
 $password = '';
 $host ='';
-$database ='fusionpbx';
+$database ='';
 $account_couchdb_id = $account_id;
 
 $account_uuid = preg_replace("/(\w{8})(\w{4})(\w{4})(\w{4})(\w{12})/i", "$1-$2-$3-$4-$5", $account_couchdb_id);
@@ -79,8 +80,10 @@ $dbconn = "postgres://" . $user . ":" . $password . "@" . $host . "/" . $databas
 
 	} else if ($json['action'] === 'doc_edited'&& $json['type'] === 'account'){
 	file_put_contents("/var/www/html/webhook-data.log",print_r($sql,true), FILE_APPEND);
+	$sql_ins = "INSERT INTO public.v_domains (domain_uuid, domain_name, domain_enabled, domain_description) VALUES('". $account_uuid ."', '" .  $request_data_account['realm'] .  "', true , '". $request_data_account['name'] ."');";
 	$sql = "UPDATE public.v_domains SET domain_name='" .$request_data_account['realm']. "', domain_description='". $request_data_account['name'] ."' WHERE domain_uuid='" . $account_uuid .   "';"; 
 	file_put_contents("/var/www/html/webhook-data.log",$sql, FILE_APPEND);
+        shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_ins . '"'  );
         shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql . '"'  );
 		} else {
 			echo "No action or event from webhook performed";
@@ -107,10 +110,13 @@ $alllinesfk = array_values(array_keys($request_data_device['provision']['feature
 	shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_line_domain . '"'  );
 
 	} else if  ($json['action'] === 'doc_edited' && $json['type'] === 'device'){
+		$sql_ins = "INSERT INTO public.v_devices (device_uuid, domain_uuid, device_address, device_label, device_vendor, device_model, device_enabled, device_template, device_username, device_password) VALUES('". $device_uuid ."'," . $account_couch_uuid . ",'".$mac_address."', '".$request_data_device['name'] ."', '". $request_data_device['provision']['endpoint_brand']  ."','". $request_data_device['provision']['endpoint_model'] ."', true ,'". $request_data_device['provision']['endpoint_brand'] . '/' . $request_data_device['provision']['endpoint_model'] . "', '". $request_data_device['sip']['username'] ."', '" . $request_data_device['sip']['password'] . "');";
 	        $sql = "UPDATE public.v_devices SET domain_uuid=".$account_couch_uuid.", device_address='".$mac_address."', device_label='".$request_data_device['name']."', device_vendor='". $request_data_device['provision']['endpoint_brand'] ."', device_model='".$request_data_device['provision']['endpoint_model']."', device_enabled=true, device_template='".$request_data_device['provision']['endpoint_brand'] . "/" . $request_data_device['provision']['endpoint_model']  ."', device_username='".$request_data_device['sip']['username']."', device_password='".$request_data_device['sip']['password']."'  WHERE device_uuid='".$device_uuid."';";
 	 	$sql_line_domain= "UPDATE public.v_device_lines set server_address = (SELECT domain_name FROM public.v_domains WHERE domain_uuid=" . $account_couch_uuid ." ) WHERE domain_uuid=". $account_couch_uuid  ." AND device_uuid='". $device_uuid  ."';";
+	file_put_contents("/var/www/html/webhook-data.log",print_r($sql,true), FILE_APPEND);
 
 		
+                shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_ins . '"'  );
                 shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql . '"'  );
 		shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_line_domain . '"'  );
 
