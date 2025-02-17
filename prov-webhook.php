@@ -85,7 +85,11 @@ $dbconn = "postgres://" . $user . ":" . $password . "@" . $host . "/" . $databas
 	file_put_contents("/var/www/html/webhook-data.log",$sql, FILE_APPEND);
         shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_ins . '"'  );
         shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql . '"'  );
-		} else {
+        } else if ($json['action'] === 'doc_deleted' && $json['type'] === 'account'){
+	$sql = "DELETE from public.v_domains WHERE domain_name='" .  $request_data_account['realm'] . "';"; 
+	file_put_contents("/var/www/html/webhook-data.log",print_r($sql,true), FILE_APPEND);
+	shell_exec("psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql . '"'  );
+	} else {
 			echo "No action or event from webhook performed";
 		}
 
@@ -108,6 +112,11 @@ $alllinesfk = array_values(array_keys($request_data_device['provision']['feature
 	shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql . '"'  );
 	shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_line . '"'  );
 	shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_line_domain . '"'  );
+
+	} if ($json['action'] === 'doc_deleted' && $json['type'] === 'device'){
+	$sql = "DELETE FROM public.v_devices WHERE device_uuid ='" . $device_uuid  . "';"; 
+
+	shell_exec("psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql . '"'  );
 
 	} else if  ($json['action'] === 'doc_edited' && $json['type'] === 'device'){
 		$sql_ins = "INSERT INTO public.v_devices (device_uuid, domain_uuid, device_address, device_label, device_vendor, device_model, device_enabled, device_template, device_username, device_password) VALUES('". $device_uuid ."'," . $account_couch_uuid . ",'".$mac_address."', '".$request_data_device['name'] ."', '". $request_data_device['provision']['endpoint_brand']  ."','". $request_data_device['provision']['endpoint_model'] ."', true ,'". $request_data_device['provision']['endpoint_brand'] . '/' . $request_data_device['provision']['endpoint_model'] . "', '". $request_data_device['sip']['username'] ."', '" . $request_data_device['sip']['password'] . "');";
