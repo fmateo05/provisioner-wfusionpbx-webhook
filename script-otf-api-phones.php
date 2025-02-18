@@ -17,13 +17,16 @@ $test1  = "$brand_arr[$i]\n" ;
 $test2 ="$brand_arr[$i]" . '/' . "$family_arr[$i]\n";
 $test3 ="$brand_arr[$i]" . '/' . "$family_arr[$i]" . '/' ."$model_arr[$i]\n";
 
-$parse = "curl -i -H 'Accept: application/json' -H 'Content-Type: application/json' -X PUT -d '{  ".'settings'." : {}}' " . "http://127.0.0.1:8080/api/phones/" . $test1 .  "\n";
-$parse .= "curl -i -H 'Accept: application/json' -H 'Content-Type: application/json' -X PUT -d '{   ".'settings'." : {}}' " . "http://127.0.0.1:8080/api/phones/" . $test2 . "\n";
-$parse .= "curl -i -H 'Accept: application/json' -H 'Content-Type: application/json' -X PUT -d '{   ".'settings'." : {}}' " . "http://127.0.0.1:8080/api/phones/" . $test3 . "\n";
+$iterate='"template": { "feature_keys": { "iterate": "15" }, "combo_keys": { "iterate": 30, "text": "Lines" } }, "settings": {}';
+
+$parse = "curl -i -H 'Accept: application/json' -H 'Content-Type: application/json' -X PUT -d '{  ".'"settings"'." : {}}' " . "http://127.0.0.1/api/phones/" . $test1 .  "\n";
+$parse .= "curl -i -H 'Accept: application/json' -H 'Content-Type: application/json' -X PUT -d '{   ".'"settings"'." : {}}' " . "http://127.0.0.1/api/phones/" . $test2 . "\n";
+$parse .= "curl -i -H 'Accept: application/json' -H 'Content-Type: application/json' -X PUT -d '{   ".'"settings"'." : {}, $iterate }' " . "http://127.0.0.1/api/phones/" . $test3 . "\n";
 
 print_r($parse);
 
 $i++;
 }
+
 
 ?>
