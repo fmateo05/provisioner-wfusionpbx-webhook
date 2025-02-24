@@ -49,7 +49,8 @@ UPDATE:
     - parking
     - personal parking
     - presence (BLF)
-    Go to vendors >> Yelink (example) and put the values like the following:
+    - 
+    Go to vendors >> Yealink (example) and put the values like the following:
     monitored_call_park -> 10
     Edit call_park and change 10 to: monitored call park
     Add speed dial with value: 13
