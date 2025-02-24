@@ -44,6 +44,20 @@ UPDATE:
 10. Enable the checkbox named 'Include Sub Accounts' to all of them.
 11. Now check everything by add account and phones on each of the tenants; if they are ok; head to fusionbpx webpanel and you will see the kazoo accounts and devices added with them.
 12. Combo/Feature Keys are able  to configure from kazoo to be replicated onto fusionpbx. Iterators can be added on the aa_factory_defaults sections.
+13. Kazoo SmartPBX includes combo_keys and feature_keys and they have about 4 key types:
+    - speed dial
+    - parking
+    - personal parking
+    - presence (BLF)
+    Go to vendors >> Yelink (example) and put the values like the following:
+    monitored_call_park -> 10
+    Edit call_park and change 10 to: monitored call park
+    Add speed dial with value: 13
+    Add speed_dial with value: speed dial
+    Add another entry called blf with value: blf
+   
+   
+     
 
 
 
