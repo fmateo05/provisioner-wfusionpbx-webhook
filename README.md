@@ -51,11 +51,8 @@ UPDATE:
     - presence (BLF)
     - 
     Go to vendors >> Yealink (example) and put the values like the following:
-    monitored_call_park -> 10
-    Edit call_park and change 10 to: monitored call park
-    Add speed dial with value: 13
-    Add speed_dial with value: speed dial
-    Add another entry called blf with value: blf
+    'monitored call park' -> 10
+    Repeat same addition for each brand for this entry.
    
    
      
