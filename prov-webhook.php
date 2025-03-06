@@ -50,7 +50,7 @@ function device_value_user($device_key_value,$account_db){
 $couch_user = '';
 $couch_pass = '';
 $couch_host = '';
-$couch_port = '';
+$couch_port = '15984';
 $conn = "http://" . $couch_user . ':' . $couch_pass . '@' . $couch_host . ':' . $couch_port ;
 //$device_key_value_user = trim($request_data_device['provision']['combo_keys'][$alllinesck[$i]]['value']['value']);  
 $users = $device_key_value;
@@ -79,10 +79,10 @@ $request_data_device  = $result_dev;
 
 
 
-$user = 'fusionpbx';
+$user = '';
 $password = '';
-$host ='5432';
-$database ='';
+$host =':5432';
+$database ='fusionpbx';
 $account_couchdb_id = $account_id;
 
 $account_uuid = preg_replace("/(\w{8})(\w{4})(\w{4})(\w{4})(\w{12})/i", "$1-$2-$3-$4-$5", $account_couchdb_id);
@@ -203,7 +203,7 @@ $alllinesfk = array_values(array_keys($request_data_device['provision']['feature
 
                 $device_key_line_fk = '0';
                 $device_key_id_fk= $alllinesfk[$j] +1 ;
-                switch($device_key_type){
+                switch($device_key_type_fk){
                 case "personal parking":
 		$sql_lines_placeholder_fk[$j] = "INSERT INTO public.v_device_keys (domain_uuid, device_key_uuid, device_uuid, device_key_id, device_key_category, device_key_vendor, device_key_type, device_key_subtype, device_key_line, device_key_value, device_key_extension,  device_key_label) VALUES(".$account_couch_uuid.", '".trim(file_get_contents('/proc/sys/kernel/random/uuid'))."', (SELECT device_uuid FROM public.v_devices WHERE device_address='".$request_data_device['mac_address']."'),'".$device_key_id_fk."' , 'memory', '".$request_data_device['provision']['endpoint_brand']."', (select value from public.v_device_vendor_functions where device_vendor_uuid=(select device_vendor_uuid from public.v_device_vendors where name='". $request_data_device['provision']['endpoint_brand'] ."') and type='monitored call park') , '', '".$device_key_line_fk."', '".$device_key_value_fk."', '', '');";
 		$sql_lines_fk[$j] = "UPDATE public.v_device_keys SET domain_uuid='".$account_uuid."', device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_id='".$device_key_id_fk."', device_key_category='memory', device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$device_key_type_fk."' , device_key_line='".$device_key_line_fk."', device_key_value='".$request_data_user['presence_id']."' WHERE device_uuid='". $device_uuid. "';";
