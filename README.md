@@ -14,7 +14,7 @@ UPDATE:
 6. Go to fusionpbx >> Advanced >> Default settings >> provisioner section >> set 'enabled' with value 'true' >> grandstream_config_url to https://<fusionpbx-host>/app/provision/
 7. In the same section; configure http_api_username , http_api_passwod (type array); also configure 'http_domain_filter' to false
 8. Inside the webhook script; configure the CouchdB and postgresql connection parameters and ensure they are correct. For reaching fusionpbx's postgresql, you can use a SSH Forwarding
-9. Go to Master Account and configure webhooks (about 4 of them).
+9. Go to Master Account and configure webhooks (about 6 of them).
 
    webhook A:
    -Trigger Event = Object
@@ -35,24 +35,41 @@ UPDATE:
    -URL: The prov-webhook php URL
    -Body Format: JSON
    - Custom Data >> Type: device >> Action: doc_created
+   
    webhook D:
    -Trigger Event = Object
    -Request Type = POST
    -URL: The prov-webhook php URL
    -Body Format: JSON
    -Custom Data >> Type: device >> Action: doc_edited
-10. Enable the checkbox named 'Include Sub Accounts' to all of them.
-11. Now check everything by add account and phones on each of the tenants; if they are ok; head to fusionbpx webpanel and you will see the kazoo accounts and devices added with them.
-12. Combo/Feature Keys are able  to configure from kazoo to be replicated onto fusionpbx. Iterators can be added on the aa_factory_defaults sections.
-13. Kazoo SmartPBX includes combo_keys and feature_keys and they have about 4 key types:
+
+ webhook E:
+   -Trigger Event = Object
+   -Request Type = POST
+   -URL: The prov-webhook php URL
+   -Body Format: JSON
+   -Custom Data >> Type: device >> Action: doc_deleted
+
+ webhook F:
+   -Trigger Event = Object
+   -Request Type = POST
+   -URL: The prov-webhook php URL
+   -Body Format: JSON
+   -Custom Data >> Type: account >> Action: doc_deleted
+
+11. Enable the checkbox named 'Include Sub Accounts' to all of them.
+12. Now check everything by add account and phones on each of the tenants; if they are ok; head to fusionbpx webpanel and you will see the kazoo accounts and devices added with them.
+13. Combo/Feature Keys are able  to configure from kazoo to be replicated onto fusionpbx. Iterators can be added on the aa_factory_defaults sections.
+14. Kazoo SmartPBX includes combo_keys and feature_keys and they have about 4 key types:
     - speed dial
     - parking
     - personal parking
     - presence (BLF)
-    - 
+    - line
+      
     Go to vendors >> Yealink (example) and put the values like the following:
     'monitored call park' -> 10
-    Repeat same addition for each brand for this entry.
+    Repeat same addition for each brand for this entry. The idea is create a kind of duplicate but with the key type changed as above
    
    
      
