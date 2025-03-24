@@ -11,8 +11,8 @@ UPDATE:
 3. Download 'script-otf-api-phones.php' and execute it under FUSIONPBX-WEBROOT/resources/templates/provision'
 4. The returned output will give a set of links to be executed instead of the OpenTelecom's section (as per, step 2).
 5. Follow the instructions like "Test the provisioner" and skip the crossbar.devices and the rest of the page
-6. Go to fusionpbx >> Advanced >> Default settings >> provisioner section >> set 'enabled' with value 'true' >> grandstream_config_url to https://<fusionpbx-host>/app/provision/
-7. In the same section; configure http_api_username , http_api_passwod (type array); also configure 'http_domain_filter' to false
+6. Go to fusionpbx's Menu >> Advanced >> Default settings >> provisioner section >> set 'enabled' with value 'true' >> grandstream_config_url to https://<fusionpbx-host>/app/provision/
+7. In the same section; set 'http_auth_username' to 'phoneprov' , 'http_auth_passwod' to your desired password; also set 'http_domain_filter' to false
 8. Inside the webhook script; configure the CouchdB and postgresql connection parameters and ensure they are correct. For reaching fusionpbx's postgresql, you can use a SSH Forwarding
 9. Go to Master Account and configure webhooks (about 6 of them).
 
