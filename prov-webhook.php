@@ -136,6 +136,20 @@ $countck =  16;
 $countck =  16;
 }
 
+$model = $request_data_device['provision']['endpoint_model'];
+$brand =  $request_data_device['provision']['endpoint_brand'];
+switch($brand){
+    case "avaya":
+       $modelup = strtoupper($model);
+       break;
+    case "snom":
+        $modelup = strtoupper($model);
+       break;
+    default:
+        $modelup = $model;
+        break;
+}
+
 
 	if ($json['action'] === 'doc_created' && $json['type'] === 'device'){
 	$sql = "INSERT INTO public.v_devices (device_uuid, domain_uuid, device_address, device_label, device_vendor, device_model, device_enabled, device_template, device_username, device_password, device_description) VALUES('" . $device_uuid . "'," . $account_couch_uuid . ",'" . $mac_address  . "','" . $request_data_device['name'] . "','" . $request_data_device['provision']['endpoint_brand'] . "','" . $request_data_device['provision']['endpoint_model'] . "', true ,'" . $request_data_device['provision']['endpoint_brand'] . "/" . $request_data_device['provision']['endpoint_model'] . "','" . $request_data_device['sip']['username'] .  "','"  . $request_data_device['sip']['password'] . "','" . $request_data_device['name'] . "');";
