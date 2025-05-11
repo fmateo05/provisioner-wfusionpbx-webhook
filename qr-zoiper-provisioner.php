@@ -90,14 +90,14 @@ $request_data_account  = $result_acc;
 $request_data_user  = $result_user;
 $request_data_device  = $result_dev;
 
-$zoiper_qr_data = 'https://oem.zoiper.com/qr.php?provider_id='. $prov_id . '&u='. $request_data_device['sip']['username']. '&h='$request_data_account['realm']'&p='. $request_data_device['sip']['password'] .'$PMT8xx9e!&o=&t=&x=&a='.$request_data_device['sip']['username'] .'&tr=';
+$zoiper_qr_data = 'https://oem.zoiper.com/qr.php?provider_id='. $prov_id . '&u='. $request_data_device['sip']['username']. '&h='$request_data_account['realm']'&p='. $request_data_device['sip']['password'] .'&o=&t=&x=&a='.$request_data_device['sip']['username'] .'&tr=';
 
 
 
 
 
 
-	if ($json['action'] === 'doc_created' && $json['type'] === 'device' || $request_data_user['device_type'] === 'softphone' || $request_data_user['device_type'] === 'smartphone'){
+	if ($json['action'] === 'doc_created' && $json['type'] === 'device' && $request_data_device['device_type'] === 'sip_device'){
 	       $ecc = 'L';
 $pixel_Size = 10;
 $frame_Size = 5;
