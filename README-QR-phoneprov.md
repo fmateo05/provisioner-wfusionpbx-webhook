@@ -1,7 +1,7 @@
-Welcome!
+## Welcome!
 
-This webhook script can be setup with the purpose of sending QR code softphone/smartphone credentials throught the user's email.
-The softphone used is PortSIP Softphone, it has the functionality of capture QR Code and set up phone credentials through it.
+<p> This webhook script can be setup with the purpose of sending QR code softphone/smartphone credentials throught the user's email.
+The softphone used is PortSIP Softphone, it has the functionality of capture QR Code and set up phone credentials through it. </p>
 
 1. Configure  email relay with an account to be able to send emails; it can be SSMTP or Postfix
 2. Clone or copy the php script to a webroot with nginx and php enabled
