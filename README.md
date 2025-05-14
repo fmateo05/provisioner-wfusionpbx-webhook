@@ -1,5 +1,9 @@
 ### Kazoo Provisioner with FusionPBX Backend.
 
+
+[![Demo Video](https://i.ytimg.com/an_webp/SiMvXK41jdM/mqdefault_6s.webp?du=3000&sqp=CLC6j8EG&rs=AOn4CLChCjDzRVUN-_vQvNujAPaTH1Ps0A)](https://www.youtube.com/watch?v=SiMvXK41jdM)
+
+
 With this script you connect a kazoo webhook to it and then will get connected to couchdb and parse variables with postgresql queries to be executed on fusionpbx's environment.
 
 Note that you should configure fusionpbx with provisioner settings enabled and configure opentelecom's provisioner for visualize the phones JSON on SmartPBX
@@ -79,9 +83,5 @@ Note that you should configure fusionpbx with provisioner settings enabled and c
     Go to devices >> vendors >> Yealink (example) and put the values like the following: <br>
     'monitored call park' -> 10 <br>
     Repeat same addition for each brand for this entry. The idea is create a kind of duplicate but with the key type changed as above <br>
-   
-   
-     
-
-
+   <br>
 
