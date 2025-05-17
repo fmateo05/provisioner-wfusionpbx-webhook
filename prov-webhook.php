@@ -32,12 +32,13 @@ function _get_account_db($account_id) {
 $account_db = str_replace('/','%2F',_get_account_db($account_id));
 
 
-
-$couch_user = 'admin';
+$couch_user = '';
 $couch_pass = '';
 $couch_host = '';
 $couch_port = '15984';
+
 $conn = "http://" . $couch_user . ':' . $couch_pass . '@' . $couch_host . ':' . $couch_port ;
+//$conn = "http://" . $couch_user . ':' . $couch_pass . '@' . $couch_host . ':' . $couch_port ;
 $device = $device_id;
 
 $command_dev = "curl -s ". $conn . '/'  . $account_db . '/' . $device . '| python3 -mjson.tool' ;
@@ -46,16 +47,14 @@ $document = shell_exec($command_dev);
 $result_dev = json_decode($document,true);
 
 function device_value_user($device_key_value,$account_db){
-/*
+
+
 $couch_user = '';
 $couch_pass = '';
 $couch_host = '';
-$couch_port = '';
-*/
-$couch_user = 'admin';
-$couch_pass = '';
-$couch_host = '';
 $couch_port = '15984';
+
+
 $conn = "http://" . $couch_user . ':' . $couch_pass . '@' . $couch_host . ':' . $couch_port ;
 //$device_key_value_user = trim($request_data_device['provision']['combo_keys'][$alllinesck[$i]]['value']['value']);  
 $users = $device_key_value;
@@ -82,35 +81,125 @@ $request_data_account  = $result_acc;
 $request_data_user  = $result_user;
 $request_data_device  = $result_dev;
 
-
+$other_uuid = trim(file_get_contents('/proc/sys/kernel/random/uuid'));
 
 $user = 'fusionpbx';
 $password = '';
 $host =':5432';
 $database ='fusionpbx';
+
+$otf_couch_user = '';
+$otf_couch_pass = '';
+$otf_couch_host = '';
+$otf_couch_port = '5984';
+$otf_couch_schema = 'zz_system_account';
+$otf_conn = "http://" . $otf_couch_user . ':' . $otf_couch_pass . '@' . $otf_couch_host . ':' . $otf_couch_port ;
+
+
 $account_couchdb_id = $account_id;
 
 $account_uuid = preg_replace("/(\w{8})(\w{4})(\w{4})(\w{4})(\w{12})/i", "$1-$2-$3-$4-$5", $account_couchdb_id);
 
+function new_uuid(){
+
+
+$new_uuid = trim(file_get_contents('/proc/sys/kernel/random/uuid'));
+
+return $new_uuid ;
+
+}
+
+
 $dbconn = "postgres://" . $user . ":" . $password . "@" . $host . "/" . $database . "?sslmode=require" ;
+
+
+$prov_url = 'https://' . str_replace('sip','prov',$request_data_account['realm']) . '/app/provision';
+$prov_domain =  str_replace('sip','prov',$request_data_account['realm']) ;
+$sip_domain =  str_replace('prov','sip',$prov_domain) ;
+
+$otf_json = '{
+  "_id": "'. $account . '",
+  "data": {
+    "grandstream_config_server_path": "'. $prov_url .'",
+    "http_auth_username": "'. $account .'",
+    "http_auth_password": "'. $other_uuid .'"
+  }
+}';
+
+$cmd_json_get= 'curl -s -H "Content-Type: application/json" -X GET ' . $otf_conn . '/' . $otf_couch_schema . '/' . $account ;
+$json_get = json_decode(shell_exec($cmd_json_get),true);
+$json_rev = $json_get['_rev'];
+$cmd_json_put = 'curl -s -H "Content-Type: application/json" -X PUT ' . $otf_conn . '/' . $otf_couch_schema . '/' . $account  .  ' -d ' . "'".  $otf_json  . "'";
+$cmd_json_del= 'curl -s -H "Content-Type: application/json" -X DELETE ' . $otf_conn . '/' . $otf_couch_schema . '/'  . $account . '?rev=' . $json_rev  ; 
+
+        $sql_settings_prov_enable = "INSERT INTO public.v_domain_settings (domain_uuid, domain_setting_uuid, domain_setting_category, domain_setting_subcategory, domain_setting_name, domain_setting_value, domain_setting_order, domain_setting_enabled, domain_setting_description) VALUES('". $account_uuid ."','". new_uuid() ."','provision', 'enabled', 'boolean',true, 0, true, 'added from webhook');";
+        $sql_settings_httpauth_enable = "INSERT INTO public.v_domain_settings (domain_uuid, domain_setting_uuid, domain_setting_category, domain_setting_subcategory, domain_setting_name, domain_setting_value, domain_setting_order, domain_setting_enabled, domain_setting_description) VALUES('". $account_uuid ."','". new_uuid() ."','provision', 'http_auth_enabled', 'boolean',true, 0, true, 'added from webhook');";
+        $sql_settings_httpauth_username = "INSERT INTO public.v_domain_settings (domain_uuid, domain_setting_uuid, domain_setting_category, domain_setting_subcategory, domain_setting_name, domain_setting_value, domain_setting_order, domain_setting_enabled, domain_setting_description) VALUES('". $account_uuid ."','". new_uuid() ."','provision', 'http_auth_username', 'text','". $account_id ."', 0, true, 'added from webhook');";
+        $sql_settings_httpauth_password = "INSERT INTO public.v_domain_settings (domain_uuid, domain_setting_uuid, domain_setting_category, domain_setting_subcategory, domain_setting_name, domain_setting_value, domain_setting_order, domain_setting_enabled, domain_setting_description) VALUES('". $account_uuid ."','". new_uuid() ."','provision', 'http_auth_password', 'array','". $other_uuid  ."', 0, true, 'added from webhook');";
+        $sql_settings_gs_url_path = "INSERT INTO public.v_domain_settings (domain_uuid, domain_setting_uuid, domain_setting_category, domain_setting_subcategory, domain_setting_name, domain_setting_value, domain_setting_order, domain_setting_enabled, domain_setting_description) VALUES('". $account_uuid ."','". new_uuid() ."','provision', 'grandstream_config_server_path', 'text','". $prov_domain . "/app/provision/', 0, true, 'added from webhook');";
+         $sql_settings_yealink_provision_url = "INSERT INTO public.v_domain_settings (domain_uuid, domain_setting_uuid, domain_setting_category, domain_setting_subcategory, domain_setting_name, domain_setting_value, domain_setting_order, domain_setting_enabled, domain_setting_description) VALUES('". $account_uuid ."','". new_uuid() ."','provision', 'yealink_provision_url', 'text','". $prov_url ."', 0, true, 'added from webhook');";
+        $sql_settings_yealink_trust_ctrl = "INSERT INTO public.v_domain_settings (domain_uuid, domain_setting_uuid, domain_setting_category, domain_setting_subcategory, domain_setting_name, domain_setting_value, domain_setting_order, domain_setting_enabled, domain_setting_description) VALUES('". $account_uuid ."','". new_uuid() ."','provision', 'yealink_trust_ctrl', 'text','0', 0, true, 'added from webhook');"; 
+        $sql_settings_yealink_trust_certs = "INSERT INTO public.v_domain_settings (domain_uuid, domain_setting_uuid, domain_setting_category, domain_setting_subcategory, domain_setting_name, domain_setting_value, domain_setting_order, domain_setting_enabled, domain_setting_description) VALUES('". $account_uuid ."','". new_uuid() ."','provision', 'yealink_trust_certificates', 'text','0', 0, true, 'added from webhook');";
+	$sql_settings_remove = "DELETE FROM public.v_domain_settings WHERE domain_uuid='". $account_uuid  ."';";
+
+
+
+
 
 	if ($json['action'] === 'doc_created' && $json['type'] === 'account'){
 //	$sql = "INSERT INTO public.v_domains (domain_uuid, domain_parent_uuid, domain_name, domain_enabled, domain_description) VALUES(" . "'" . trim(file_get_contents('/proc/sys/kernel/random/uuid')) . "'" .   ', null ,' . "'" . $request_data_account['realm'] . "'" . ',true,' . "'" .  $request_data_account['name'] . "'" . ");";
-	$sql = "INSERT INTO public.v_domains (domain_uuid, domain_name, domain_enabled, domain_description) VALUES('". $account_uuid ."', '" .  $request_data_account['realm'] .  "', true , '". $request_data_account['name'] ."');";
+	$sql = "INSERT INTO public.v_domains (domain_uuid, domain_name, domain_enabled, domain_description) VALUES('". $account_uuid ."', '" . $prov_domain  .  "', true , '". $request_data_account['name'] ."');";
 	file_put_contents("/var/www/html/webhook-data.log",$sql, FILE_APPEND);
+	shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_settings_prov_enable . '"'  );
+        shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_settings_httpauth_enable . '"'  );
+        shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_settings_httpauth_username . '"'  );
+        shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_settings_httpauth_password . '"'  );
+        shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_settings_gs_url_path . '"'  );
+        shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_settings_yealink_provision_url . '"'  );
+        shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_yealink_trust_ctrl . '"'  );
+        shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_yealink_trust_certs . '"'  );
+	shell_exec($cmd_json_put);
+
+
+
 	shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql . '"'  );
 
 	} else if ($json['action'] === 'doc_edited'&& $json['type'] === 'account'){
 	file_put_contents("/var/www/html/webhook-data.log",print_r($sql,true), FILE_APPEND);
-	$sql_ins = "INSERT INTO public.v_domains (domain_uuid, domain_name, domain_enabled, domain_description) VALUES('". $account_uuid ."', '" .  $request_data_account['realm'] .  "', true , '". $request_data_account['name'] ."');";
-	$sql = "UPDATE public.v_domains SET domain_name='" .$request_data_account['realm']. "', domain_description='". $request_data_account['name'] ."' WHERE domain_uuid='" . $account_uuid .   "';"; 
+	$sql_ins = "INSERT INTO public.v_domains (domain_uuid, domain_name, domain_enabled, domain_description) VALUES('". $account_uuid ."', '" .  $prov_domain .  "', true , '". $request_data_account['name'] ."');";
+	$sql = "UPDATE public.v_domains SET domain_name='" . $prov_domain . "', domain_description='". $request_data_account['name'] ."' WHERE domain_uuid='" . $account_uuid .   "';"; 
 	file_put_contents("/var/www/html/webhook-data.log",$sql, FILE_APPEND);
         shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_ins . '"'  );
+
+
+        shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_settings_remove . '"'  );
+	
+        shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_settings_prov_enable . '"'  );
+        shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_settings_httpauth_enable . '"'  );
+        shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_settings_httpauth_username . '"'  );
+        shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_settings_httpauth_password . '"'  );
+        shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_settings_gs_url_path . '"'  );
+        shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_settings_yealink_provision_url . '"'  );
+        shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_yealink_trust_ctrl . '"'  );
+        shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_yealink_trust_certs . '"'  );
+	
+	
+	file_put_contents("/var/www/html/webhook-data.log",print_r($json_del,true), FILE_APPEND);
+
+	shell_exec($cmd_json_put);
+	shell_exec($cmd_json_del);
+	shell_exec($cmd_json_put);
+	
+
+
         shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql . '"'  );
+
+
+
         } else if ($json['action'] === 'doc_deleted' && $json['type'] === 'account'){
-	$sql = "DELETE from public.v_domains WHERE domain_name='" .  $request_data_account['realm'] . "';"; 
+	$sql = "DELETE from public.v_domains WHERE domain_name='" .  $prov_domain . "';"; 
 	file_put_contents("/var/www/html/webhook-data.log",print_r($sql,true), FILE_APPEND);
-	shell_exec("psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql . '"'  );
+	shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql . '"'  );
 	} else {
 			echo "No action or event from webhook performed";
 		}
@@ -118,7 +207,7 @@ $dbconn = "postgres://" . $user . ":" . $password . "@" . $host . "/" . $databas
 
 $device_uuid = preg_replace("/(\w{8})(\w{4})(\w{4})(\w{4})(\w{12})/i", "$1-$2-$3-$4-$5", $device_id);
 $account_couch_id = $request_data_device['pvt_account_id'];
-$account_couch_uuid = "(SELECT domain_uuid FROM public.v_domains WHERE domain_name='". $request_data_account['realm'] ."')";
+$account_couch_uuid = "(SELECT domain_uuid FROM public.v_domains WHERE domain_name='". $prov_domain ."')";
 //$account_couch_uuid = preg_replace("/(\w{8})(\w{4})(\w{4})(\w{4})(\w{12})/i", "$1-$2-$3-$4-$5", $account_couch_id);
 $mac_address = $request_data_device['mac_address'];
 $alllinesck = array_values(array_keys($request_data_device['provision']['combo_keys'])) ;
@@ -153,17 +242,17 @@ switch($brand){
 
 	if ($json['action'] === 'doc_created' && $json['type'] === 'device'){
 	$sql = "INSERT INTO public.v_devices (device_uuid, domain_uuid, device_address, device_label, device_vendor, device_model, device_enabled, device_template, device_username, device_password, device_description) VALUES('" . $device_uuid . "'," . $account_couch_uuid . ",'" . $mac_address  . "','" . $request_data_device['name'] . "','" . $request_data_device['provision']['endpoint_brand'] . "','" . $request_data_device['provision']['endpoint_model'] . "', true ,'" . $request_data_device['provision']['endpoint_brand'] . "/" . $request_data_device['provision']['endpoint_model'] . "','" . $request_data_device['sip']['username'] .  "','"  . $request_data_device['sip']['password'] . "','" . $request_data_device['name'] . "');";
-	 	$sql_line= "INSERT INTO public.v_device_lines (domain_uuid, device_line_uuid, device_uuid, line_number, display_name, user_id, auth_id,password, sip_port, sip_transport, register_expires, enabled) VALUES(" . $account_couch_uuid . ",'". trim(file_get_contents('/proc/sys/kernel/random/uuid')) . "','" . $device_uuid .  "',1,'" . $request_data_device['name'] . "','" . $request_data_device['sip']['username'] . "','" . $request_data_device['sip']['username'] . "','" . $request_data_device['sip']['password'] . "',5060, 'udp', 120 ,  true);";
-	 	$sql_line_domain= "UPDATE public.v_device_lines set server_address = (SELECT domain_name FROM public.v_domains WHERE domain_uuid=" . $account_couch_uuid ." ) WHERE domain_uuid=". $account_couch_uuid  ." AND device_uuid='". $device_uuid  ."';";
+	 	$sql_line= "INSERT INTO public.v_device_lines (domain_uuid, device_line_uuid, device_uuid, line_number, display_name, user_id, auth_id,password, sip_port, sip_transport, register_expires, enabled,server_address) VALUES(" . $account_couch_uuid . ",'". trim(file_get_contents('/proc/sys/kernel/random/uuid')) . "','" . $device_uuid .  "',1,'" . $request_data_device['name'] . "','" . $request_data_device['sip']['username'] . "','" . $request_data_device['sip']['username'] . "','" . $request_data_device['sip']['password'] . "',5060, 'udp', 300,  true,'" . $sip_domain.  "');";
+	 	$sql_line_domain= "UPDATE public.v_device_lines set server_address = '" . $sip_domain . "'  WHERE domain_uuid=". $account_couch_uuid  ." AND device_uuid='". $device_uuid  ."';";
 	file_put_contents("/var/www/html/webhook-data.log",$sql, FILE_APPEND);
 	shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql . '"'  );
 	shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_line . '"'  );
-	shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_line_domain . '"'  );
+//	shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_line_domain . '"'  );
 
 	} if ($json['action'] === 'doc_deleted' && $json['type'] === 'device'){
 	$sql = "DELETE FROM public.v_devices WHERE device_uuid ='" . $device_uuid  . "';"; 
 
-	shell_exec("psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql . '"'  );
+	shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql . '"'  );
 
 	} else if  ($json['action'] === 'doc_edited' && $json['type'] === 'device'){
 		$sql_ins = "INSERT INTO public.v_devices (device_uuid, domain_uuid, device_address, device_label, device_vendor, device_model, device_enabled, device_template, device_username, device_password) VALUES('". $device_uuid ."'," . $account_couch_uuid . ",'".$mac_address."', '".$request_data_device['name'] ."', '". $request_data_device['provision']['endpoint_brand']  ."','". $request_data_device['provision']['endpoint_model'] ."', true ,'". $request_data_device['provision']['endpoint_brand'] . '/' . $request_data_device['provision']['endpoint_model'] . "', '". $request_data_device['sip']['username'] ."', '" . $request_data_device['sip']['password'] . "') ;";
@@ -171,11 +260,12 @@ switch($brand){
 	 	
 //                $sql_line_domain= "UPDATE public.v_device_lines set server_address = (SELECT domain_name FROM public.v_domains WHERE domain_uuid=" . $account_couch_uuid ." ) WHERE domain_uuid=". $account_couch_uuid  ." AND device_uuid='". $device_uuid  ."';";
 //		$sql_lines_del= "DELETE FROM public.v_device_keys WHERE device_uuid=(SELECT device_uuid FROM public.v_devices WHERE device_address='". $request_data_device['mac_address']."') ;" ;
-                $sql_line= "INSERT INTO public.v_device_lines (domain_uuid, device_line_uuid, device_uuid, line_number, label, display_name, user_id, auth_id,password, sip_port, sip_transport, register_expires, enabled, server_address) VALUES(" . $account_couch_uuid . ",'". trim(file_get_contents('/proc/sys/kernel/random/uuid')) . "','" . $device_uuid .  "','1','" . $request_data_device['name'] . "','" . $request_data_device['name'] . "','" . $request_data_device['sip']['username'] . "','" . $request_data_device['sip']['username'] . "','" . $request_data_device['sip']['password'] . "',5060, 'udp', 120 ,  true, (SELECT domain_name FROM public.v_domains WHERE domain_uuid=" . $account_couch_uuid ." ));";
+                $sql_line= "INSERT INTO public.v_device_lines (domain_uuid, device_line_uuid, device_uuid, line_number, label, display_name, user_id, auth_id,password, sip_port, sip_transport, register_expires, enabled, server_address) VALUES(" . $account_couch_uuid . ",'". trim(file_get_contents('/proc/sys/kernel/random/uuid')) . "','" . $device_uuid .  "','1','" . $request_data_device['name'] . "','" . $request_data_device['name'] . "','" . $request_data_device['sip']['username'] . "','" . $request_data_device['sip']['username'] . "','" . $request_data_device['sip']['password'] . "',5060, 'udp', 300,  true,'". $sip_domain  . "');";
 		
                 $sql_lines_del= "DELETE FROM public.v_device_lines WHERE device_uuid=(SELECT device_uuid FROM public.v_devices WHERE device_address='". $request_data_device['mac_address']."') ;" ;
 
                 $sql_lines_ck_del= "DELETE FROM public.v_device_keys WHERE device_uuid=(SELECT device_uuid FROM public.v_devices WHERE device_address='". $request_data_device['mac_address']."') ;" ;
+	file_put_contents("/var/www/html/webhook-data.log",print_r($sql_line,true), FILE_APPEND);
 
 	//file_put_contents("/var/www/html/webhook-data.log",print_r($sql,true), FILE_APPEND);
 
@@ -439,5 +529,3 @@ switch($brand){
 			echo "No action or event from webhook performed";
 		
 		}
-		
-		
