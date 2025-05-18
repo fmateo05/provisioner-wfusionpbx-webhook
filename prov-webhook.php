@@ -88,12 +88,10 @@ $password = '';
 $host =':5432';
 $database ='fusionpbx';
 
-$otf_couch_user = '';
-$otf_couch_pass = '';
+$credentials = trim('<Your master account MD5 code>');
 $otf_couch_host = '';
-$otf_couch_port = '5984';
-$otf_couch_schema = 'zz_system_account';
-$otf_conn = "http://" . $otf_couch_user . ':' . $otf_couch_pass . '@' . $otf_couch_host . ':' . $otf_couch_port ;
+$otf_couch_port = '8000';
+$otf_conn = "http://" . $otf_couch_host . ':' . $otf_couch_port  . '/v2/';
 
 
 $account_couchdb_id = $account_id;
@@ -109,6 +107,21 @@ return $new_uuid ;
 
 }
 
+function json_patch($account_id,$cmd_json_patch) {
+$tmpfile = '/tmp/'  .  $account_id . '.lock';
+
+	if(file_exists($tmpfile)){
+	file_put_contents("/var/www/html/webhook-data.log","\n". $cmd_json_patch, FILE_APPEND);
+	 shell_exec('touch ' .$tmpfile);
+	shell_exec($cmd_json_patch);
+	 
+	} else {
+ 	echo 'nothing';
+	
+	}
+//	shell_exec('rm -f ' . $tmpfile);
+
+}
 
 $dbconn = "postgres://" . $user . ":" . $password . "@" . $host . "/" . $database . "?sslmode=require" ;
 
@@ -117,20 +130,28 @@ $prov_url = 'https://' . str_replace('sip','prov',$request_data_account['realm']
 $prov_domain =  str_replace('sip','prov',$request_data_account['realm']) ;
 $sip_domain =  str_replace('prov','sip',$prov_domain) ;
 
-$otf_json = '{
-  "_id": "'. $account . '",
+$auth_doc = '{
   "data": {
+      "credentials": "'. $credentials .'",
+      "account_name": "master"
+  }
+}';
+
+$otf_json = '{ 
+   "data":{
     "grandstream_config_server_path": "'. $prov_url .'",
     "http_auth_username": "'. $account .'",
     "http_auth_password": "'. $other_uuid .'"
   }
 }';
 
-$cmd_json_get= 'curl -s -H "Content-Type: application/json" -X GET ' . $otf_conn . '/' . $otf_couch_schema . '/' . $account ;
-$json_get = json_decode(shell_exec($cmd_json_get),true);
-$json_rev = $json_get['_rev'];
-$cmd_json_put = 'curl -s -H "Content-Type: application/json" -X PUT ' . $otf_conn . '/' . $otf_couch_schema . '/' . $account  .  ' -d ' . "'".  $otf_json  . "'";
-$cmd_json_del= 'curl -s -H "Content-Type: application/json" -X DELETE ' . $otf_conn . '/' . $otf_couch_schema . '/'  . $account . '?rev=' . $json_rev  ; 
+$cmd_json_auth= 'curl -s -H "Content-Type: application/json" -X PUT ' . $otf_conn . 'user_auth -d ' . "'" . $auth_doc . "'" ;
+$json_auth = json_decode(shell_exec($cmd_json_auth),true);
+$cmd_json_get= 'curl -s -H "Content-Type: application/json" -H "X-Auth-Token: '. $json_auth['auth_token']. '" -X GET ' . $otf_conn . 'accounts/' . $account ;
+$cmd_json_patch = 'curl -s -H "Content-Type: application/json" -H "X-Auth-Token: ' . $json_auth['auth_token'] . '"  -X PATCH ' . $otf_conn . 'accounts/' . $account  .  ' -d ' . "'".  $otf_json  . "'";
+//$cmd_json_post = 'curl -s -H "Content-Type: application/json" -X PUT ' . $conn . '/accounts/' . $account . '?rev=' . $json_rev  .  ' -d ' . "'".  $otf_json  . "'";
+//$cmd_json_del= 'curl -s -H "Content-Type: application/json" -X DELETE ' . $otf_conn . '/' . $otf_couch_schema . '/'  . $account . '?rev=' . $json_rev  ; 
+	$sql_settings_prov_check  = "SELECT * from public.v_domain_settings WHERE domain_uuid ='" . $account_uuid . "' AND domain_setting_category='provision' AND domain_setting_subcategory='enabled' LIMIT 1;" ;
 
         $sql_settings_prov_enable = "INSERT INTO public.v_domain_settings (domain_uuid, domain_setting_uuid, domain_setting_category, domain_setting_subcategory, domain_setting_name, domain_setting_value, domain_setting_order, domain_setting_enabled, domain_setting_description) VALUES('". $account_uuid ."','". new_uuid() ."','provision', 'enabled', 'boolean',true, 0, true, 'added from webhook');";
         $sql_settings_httpauth_enable = "INSERT INTO public.v_domain_settings (domain_uuid, domain_setting_uuid, domain_setting_category, domain_setting_subcategory, domain_setting_name, domain_setting_value, domain_setting_order, domain_setting_enabled, domain_setting_description) VALUES('". $account_uuid ."','". new_uuid() ."','provision', 'http_auth_enabled', 'boolean',true, 0, true, 'added from webhook');";
@@ -149,7 +170,11 @@ $cmd_json_del= 'curl -s -H "Content-Type: application/json" -X DELETE ' . $otf_c
 	if ($json['action'] === 'doc_created' && $json['type'] === 'account'){
 //	$sql = "INSERT INTO public.v_domains (domain_uuid, domain_parent_uuid, domain_name, domain_enabled, domain_description) VALUES(" . "'" . trim(file_get_contents('/proc/sys/kernel/random/uuid')) . "'" .   ', null ,' . "'" . $request_data_account['realm'] . "'" . ',true,' . "'" .  $request_data_account['name'] . "'" . ");";
 	$sql = "INSERT INTO public.v_domains (domain_uuid, domain_name, domain_enabled, domain_description) VALUES('". $account_uuid ."', '" . $prov_domain  .  "', true , '". $request_data_account['name'] ."');";
-	file_put_contents("/var/www/html/webhook-data.log",$sql, FILE_APPEND);
+	$sql_settings_check = shell_exec("sudo psql -qtAx -d " . '"' . $dbconn . '" -c ' . '"' . $sql_settings_prov_check . '"'  );
+	file_put_contents("/var/www/html/webhook-data.log",$sql_settings_check, FILE_APPEND);
+
+	if(empty($sql_settings_check)) { 
+
 	shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_settings_prov_enable . '"'  );
         shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_settings_httpauth_enable . '"'  );
         shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_settings_httpauth_username . '"'  );
@@ -158,8 +183,10 @@ $cmd_json_del= 'curl -s -H "Content-Type: application/json" -X DELETE ' . $otf_c
         shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_settings_yealink_provision_url . '"'  );
         shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_yealink_trust_ctrl . '"'  );
         shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_yealink_trust_certs . '"'  );
-	shell_exec($cmd_json_put);
-
+	shell_exec($cmd_json_patch);
+	} else {
+		echo "do nothing";
+	}
 
 
 	shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql . '"'  );
@@ -172,6 +199,10 @@ $cmd_json_del= 'curl -s -H "Content-Type: application/json" -X DELETE ' . $otf_c
         shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_ins . '"'  );
 
 
+
+	$sql_settings_check = shell_exec("sudo psql -qtAX -d " . '"' . $dbconn . '" -c ' . '"' . $sql_settings_prov_check . '"'  );
+	file_put_contents("/var/www/html/webhook-data.log",$sql_settings_prov_check, FILE_APPEND);
+	if(empty($sql_settings_check)) { 
         shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_settings_remove . '"'  );
 	
         shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_settings_prov_enable . '"'  );
@@ -182,13 +213,18 @@ $cmd_json_del= 'curl -s -H "Content-Type: application/json" -X DELETE ' . $otf_c
         shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_settings_yealink_provision_url . '"'  );
         shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_yealink_trust_ctrl . '"'  );
         shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_yealink_trust_certs . '"'  );
-	
-	
-	file_put_contents("/var/www/html/webhook-data.log",print_r($json_del,true), FILE_APPEND);
 
-	shell_exec($cmd_json_put);
-	shell_exec($cmd_json_del);
-	shell_exec($cmd_json_put);
+	shell_exec($cmd_json_patch);
+	} else {
+		echo "do nothing";
+	}
+	
+	
+//	file_put_contents("/var/www/html/webhook-data.log",print_r($cmd_json_post,true), FILE_APPEND);
+
+//	shell_exec($cmd_json_post);
+//	shell_exec($cmd_json_del);
+//	shell_exec($cmd_json_put);
 	
 
 
