@@ -20,7 +20,7 @@ Note that you should configure fusionpbx with provisioner settings enabled and c
 5. Follow the instructions like "Test the provisioner" and skip the crossbar.devices and the rest of the page <br>
 6. Go to fusionpbx's Menu >> Advanced >> Default settings >> provisioner section >> set 'enabled' with value 'true' >> grandstream_config_url to https://prov.example.com/app/provision/ <br>
 7. In the same section; set 'http_auth_username' to 'phoneprov' , 'http_auth_passwod' to your desired password; also set 'http_domain_filter' to false <br>
-8. Inside the webhook script; configure the CouchdB and postgresql connection parameters and ensure they are correct. For reaching fusionpbx's postgresql, you can use a SSH Forwarding <br>
+8. Inside the webhook script; configure the CouchdB and postgresql connection parameters and ensure they are correct. In fusionpbx; edit postgresql.conf and pg_hba.conf to allow connections from the server where the script is located  <br>
  8 b) Create an user in master account and generate the md5 credentials for be added to API connection parameters. 
 9. Go to Master Account and configure webhooks (about 6 of them).<br>
 
