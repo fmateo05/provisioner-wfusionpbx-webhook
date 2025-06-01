@@ -1,6 +1,8 @@
 # **We setup provisioner for your Kazoo Server or environment.**
 
 ## Supported Brands: 30 (withouth softphones)
+![kazooprov-demo-other-brands](https://github.com/user-attachments/assets/0c4d05ac-7ae8-4a13-b2c5-db26dc83438b)
+
 ## Supported Models: 350+
 ![kazooprov-demo-2-other](https://github.com/user-attachments/assets/d5f3ecfa-49bd-4c22-b178-23a1afd2304a)
 
