@@ -301,33 +301,44 @@ switch($brand){
 		$query_devices =  trim(shell_exec("sudo psql -qtAX -d " . '"' . $dbconn . '" -c ' . '"' . $sel_query_devices . '"'  ));
 		$query_lines =  trim(shell_exec("sudo psql -qtAX -d " . '"' . $dbconn . '" -c ' . '"' . $sel_query_device_line . '"'  ));
                 $query_device_profiles=  trim(shell_exec("sudo psql -qtAX -d " . '"' . $dbconn . '" -c ' . '"' . $sql_query_profile . '"'  ));
+                $sql_query_profile_uuid = "SELECT device_profile_uuid FROM public.v_device_profiles WHERE domain_uuid='". $account_uuid ."' AND device_profile_name='". $query_device_profiles ."';";
+                $query_device_profile_uuid =  trim(shell_exec("sudo psql -qtAX -d " . '"' . $dbconn . '" -c ' . '"' . $sql_query_profile_uuid . '"'  ));
 	file_put_contents("/var/www/html/webhook-data.log",print_r($query_device_profiles,true), FILE_APPEND);
 //	file_put_contents("/var/www/html/webhook-data.log",print_r($query_lines,true), FILE_APPEND);
 		
-		if( !$query_device_profiles){
-        	$sql_profile = "INSERT INTO public.v_device_profiles (device_profile_uuid, domain_uuid, device_profile_name, device_profile_enabled, device_profile_description) VALUES('". new_uuid() ."','". $account_uuid ."', '". $request_data_device['name'] ."', 'true', '". $request_data_device['name'] ."-profile');";
+		if(!$query_devices){
+        	$sql_profile = "INSERT INTO public.v_device_profiles (device_profile_uuid, domain_uuid, device_profile_name, device_profile_enabled, device_profile_description) VALUES('". $device_uuid ."','". $account_uuid ."', '". $request_data_device['name'] ."', 'true', '". $request_data_device['name'] ."-profile');";
                 shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_profile . '"'  );
-			if( !$query_devices){
+//			if(!$query_devices){
                 $query_device_profiles=  trim(shell_exec("sudo psql -qtAX -d " . '"' . $dbconn . '" -c ' . '"' . $sql_query_profile . '"'  ));
-		$sql_ins = "INSERT INTO public.v_devices (device_uuid, domain_uuid, device_address, device_label, device_vendor, device_model, device_enabled, device_template, device_username, device_password,device_profile_uuid) VALUES('". $device_uuid ."','" . $account_uuid . "','".$mac_address."', '".$request_data_device['name'] ."', '". $polyadj  ."','". $modelup ."', true ,'". $request_data_device['provision']['endpoint_brand'] . '/' . $modelup . "', '". $request_data_device['sip']['username'] ."', '" . $request_data_device['sip']['password'] . "','". $query_device_profiles ."');";
+		$sql_ins = "INSERT INTO public.v_devices (device_uuid, domain_uuid, device_address, device_label, device_vendor, device_model, device_enabled, device_template, device_username, device_password,device_profile_uuid) VALUES('". $device_uuid ."','" . $account_uuid . "','".$mac_address."', '".$request_data_device['name'] ."', '". $polyadj  ."','". $modelup ."', true ,'". $request_data_device['provision']['endpoint_brand'] . '/' . $modelup . "', '". $request_data_device['sip']['username'] ."', '" . $request_data_device['sip']['password'] . "','". $device_uuid ."');";
 		file_put_contents("/var/www/html/webhook-data.log",print_r($sql_ins,true), FILE_APPEND);
                 shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_ins . '"'  );
-				}
-			if ( !$query_lines ) {
+//				}
+//			if (!$query_lines) {
                 $sql_line= "INSERT INTO public.v_device_lines (domain_uuid, device_line_uuid, device_uuid, line_number, label, display_name, user_id, auth_id,password, sip_port, sip_transport, register_expires, enabled, server_address) VALUES('" . $account_uuid . "','". trim(file_get_contents('/proc/sys/kernel/random/uuid')) . "','" . $device_uuid .  "','1','" . $request_data_device['name'] . "','" . $request_data_device['name'] . "','" . $request_data_device['sip']['username'] . "','" . $request_data_device['sip']['username'] . "','" . $request_data_device['sip']['password'] . "',5060, 'udp', 300,  true,'". $sip_domain  . "');";
                 shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_line . '"'  );
-				}
+//				}
 
 	file_put_contents("/var/www/html/webhook-data.log",print_r($sql_ins,true), FILE_APPEND);
 
 		
 		
-		} else if(isset($query_devices) && isset($query_lines)){
-	       $sql = "UPDATE public.v_devices SET domain_uuid='".$account_uuid."', device_profile_uuid='". $query_device_profiles ."' , device_address='".$mac_address."', device_label='".$request_data_device['name']."', device_vendor='". $polyadj ."', device_model='".$modelup ."', device_enabled=true, device_template='".$request_data_device['provision']['endpoint_brand'] . "/" . $modelup  ."', device_username='".$request_data_device['sip']['username']."', device_password='".$request_data_device['sip']['password']."' WHERE device_uuid='".$device_uuid ."' ;";
+		} else if(!empty($query_devices) || !empty($query_lines) || !empty($query_device_profiles)){
+                $query_device_profile_uuid =  trim(shell_exec("sudo psql -qtAX -d " . '"' . $dbconn . '" -c ' . '"' . $sql_query_profile_uuid . '"'  ));
+                $sql_query_profile = "SELECT device_profile_uuid FROM public.v_device_profiles WHERE domain_uuid='". $account_uuid ."' AND device_profile_name='". $request_data_device['name'] ."';";
+//                $query_device_profiles=  trim(shell_exec("sudo psql -qtAX -d " . '"' . $dbconn . '" -c ' . '"' . $sql_query_profile . '"'  ));
+//                $query_device_profiles_uuid=  trim(shell_exec("sudo psql -qtAX -d " . '"' . $dbconn . '" -c ' . '"' . $sql_query_profile_uuid . '"'  ));
+
+	       $sel_query_device_profiles = "UPDATE public.v_device_profiles SET domain_uuid='" . $account_uuid . "', device_profile_name='". $request_data_device['name']  ."', device_profile_enabled='true', device_profile_description='". $request_data_device['name'] ."' WHERE device_profile_uuid='". $device_uuid ."';";
+	file_put_contents("/var/www/html/webhook-data.log",print_r($sel_query_device_profiles,true), FILE_APPEND);
+	       $sql = "UPDATE public.v_devices SET domain_uuid='".$account_uuid."', device_profile_uuid='". $device_uuid."' , device_address='".$mac_address."', device_label='".$request_data_device['name']."', device_vendor='". $polyadj ."', device_model='".$modelup ."', device_enabled=true, device_template='".$request_data_device['provision']['endpoint_brand'] . "/" . $modelup  ."', device_username='".$request_data_device['sip']['username']."', device_password='".$request_data_device['sip']['password']."' WHERE device_uuid='".$device_uuid ."' ;";
+	file_put_contents("/var/www/html/webhook-data.log",print_r($sql,true), FILE_APPEND);
 	 	
                 $sql_line_domain= "UPDATE public.v_device_lines set line_number='1',label='". $request_data_device['name'] ."',display_name='". $request_data_device['name'] ."',user_id='". $request_data_device['sip']['username']."',auth_id='". $request_data_device['sip']['username'] ."', password='". $request_data_device['sip']['password'] ."', server_address='". $sip_domain . "'  WHERE domain_uuid='". $account_uuid  ."' AND device_uuid='". $device_uuid  ."';"; // WHERE device_uuid='". $device_uuid  . "' AND device_line_uuid='". $query_lines ."';";
 	file_put_contents("/var/www/html/webhook-data.log",print_r($sql_line_domain,true), FILE_APPEND);
 	       
+                shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sel_query_device_profiles . '"'  );
                 shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql . '"'  );
                 shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_line_domain . '"'  );
 		
