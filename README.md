@@ -1,7 +1,7 @@
 ### Kazoo Provisioner with FusionPBX Backend.
 
 
-[![Demo Video](https://i.ytimg.com/an_webp/SiMvXK41jdM/mqdefault_6s.webp?du=3000&sqp=CLC6j8EG&rs=AOn4CLChCjDzRVUN-_vQvNujAPaTH1Ps0A)](https://www.youtube.com/watch?v=SiMvXK41jdM)
+https://www.youtube.com/watch?v=SiMvXK41jdM
 
 ![image](https://github.com/user-attachments/assets/85daba7c-45d1-447e-9054-a8677ef9f2b1)
 
