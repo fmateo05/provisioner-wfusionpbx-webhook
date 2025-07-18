@@ -71,9 +71,9 @@ Note that you should configure fusionpbx with provisioner settings enabled and c
 
 8. Enable the checkbox named 'Include Sub Accounts' to all of them. <br>
 9. Now check everything by adding or editing account and phones on each of the tenants; if they are ok; head to fusionbpx webpanel and you will see the kazoo accounts and devices added with them. <br>
-10. Combo/Feature Keys are able  to configure from kazoo to be replicated onto fusionpbx. Iterators can be added on the aa_factory_defaults sections. <br>
-11. Replace SmartPBX App with the one listed in this project (https://github.com/fmateo05/monster-ui-voip-bin)
+10. Replace SmartPBX App with the one listed in this project (https://github.com/fmateo05/monster-ui-voip-bin)
 11. Kazoo SmartPBX includes combo_keys and feature_keys and they have about 4 key types: <br>
+12. Combo/Feature/Expansion/Programmable Keys are able  to configure from kazoo to be replicated onto fusionpbx. Iterators can be added/edited on the aa_factory_defaults sections. <br>
 <br>
 <p> - speed dial <br>
     - parking <br>
@@ -86,4 +86,7 @@ Note that you should configure fusionpbx with provisioner settings enabled and c
     'monitored call park' -> 10 <br>
     Repeat same addition for each brand for this entry. The idea is create a kind of duplicate but with the key type changed as above <br>
    <br>
+13. Clone and Import FusionPBX provisioner App (https://github.com/fmateo05/monster-ui-fusionpbx-provisioner) as 'provisioner' inside apps folder
+14. Once imported, please open the app and click the button to show up the URLs to be configured and added into phone devices (also with DHCP Option 66)
+   If they show empty, please go to the required account using smartpbx and add a device of any type; then go back to provisioner app.
 
