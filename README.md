@@ -15,14 +15,11 @@ Note that you should configure fusionpbx with provisioner settings enabled and c
 
 1. Install a fusionpbx  normally on different instance or VPS <br>
 2. Deploy and follow Opentelecom's provisioner until the section "Create phone make, family and model details" Note that postgresql client must be installed with curl, python3 and PHP 5 or 7.2 <br>
-3. Check 'script-otf-api-phones.php' and execute it under FUSIONPBX-WEBROOT/resources/templates/provision' <br>
-4. The returned output will give a set of links to be executed instead of the OpenTelecom's section (as per, step 2). <br>
+3. Clone the latest fusionpbx code from github and also change the directory to FUSIONPBX-WEBROOT/resources/templates/provision Check 'script-otf-api-phones.php' and execute it under FUSIONPBX-WEBROOT/resources/templates/provision'
+4. The returned output will give a set of links to be executed instead of the OpenTelecom's section (as per, step 2).  Note that some links should still be adjusted to be able to add more models <br> <br>
 5. Follow the instructions like "Test the provisioner" and skip the crossbar.devices and the rest of the page <br>
-6. Go to fusionpbx's Menu >> Advanced >> Default settings >> provisioner section >> set 'enabled' with value 'true' >> grandstream_config_url to https://prov.example.com/app/provision/ <br>
-7. In the same section; set 'http_auth_username' to 'phoneprov' , 'http_auth_passwod' to your desired password; also set 'http_domain_filter' to false <br>
-8. Inside the webhook script; configure the CouchdB and postgresql connection parameters and ensure they are correct. In fusionpbx; edit postgresql.conf and pg_hba.conf to allow connections from the server where the script is located  <br>
- 8 b) Create an user in master account and generate the md5 credentials for be added to API connection parameters. 
-9. Go to Master Account and configure webhooks (about 6 of them).<br>
+6. Inside the env.php in webhook folder; configure the Master account user's md5sum, CouchdB and postgresql connection parameters and ensure they are correct. In fusionpbx; edit postgresql.conf and pg_hba.conf to allow connections from the server where the script is located, change listen address to eth0 server's IP and add another line in pg_hba.conf, similar to 127.0.0.1 but allowing connections from where webhook server is located   <br>
+7. Go to Master Account and configure webhooks (about 6 of them).<br>
 
    webhook A:<br>
    -Trigger Event = Object <br>
@@ -72,10 +69,11 @@ Note that you should configure fusionpbx with provisioner settings enabled and c
    -Custom Data >> Type: account >> Action: doc_deleted <br>
    <br>
 
-10. Enable the checkbox named 'Include Sub Accounts' to all of them. <br>
-11. Now check everything by adding or editing account and phones on each of the tenants; if they are ok; head to fusionbpx webpanel and you will see the kazoo accounts and devices added with them. <br>
-12. Combo/Feature Keys are able  to configure from kazoo to be replicated onto fusionpbx. Iterators can be added on the aa_factory_defaults sections. <br>
-13. Kazoo SmartPBX includes combo_keys and feature_keys and they have about 4 key types: <br>
+8. Enable the checkbox named 'Include Sub Accounts' to all of them. <br>
+9. Now check everything by adding or editing account and phones on each of the tenants; if they are ok; head to fusionbpx webpanel and you will see the kazoo accounts and devices added with them. <br>
+10. Combo/Feature Keys are able  to configure from kazoo to be replicated onto fusionpbx. Iterators can be added on the aa_factory_defaults sections. <br>
+11. Replace SmartPBX App with the one listed in this project (https://github.com/fmateo05/monster-ui-voip-bin)
+11. Kazoo SmartPBX includes combo_keys and feature_keys and they have about 4 key types: <br>
 <br>
 <p> - speed dial <br>
     - parking <br>
