@@ -45,11 +45,11 @@ $document = shell_exec($command_dev);
 
 $result_dev = json_decode($document,true);
 
-function device_value_user($device_key_value,$account_db){
+function device_value_user($device_key_value,$account_db,$conn){
 
 
 
-$conn = "http://" . $couch_user . ':' . $couch_pass . '@' . $couch_host . ':' . $couch_port ;
+//$conn = "http://" . $couch_user . ':' . $couch_pass . '@' . $couch_host . ':' . $couch_port ;
 //$device_key_value_user = trim($request_data_device['provision']['combo_keys'][$alllinesck[$i]]['value']['value']);  
 $users = $device_key_value;
 
@@ -342,7 +342,7 @@ switch($brand){
 		
 		
 		} else if(isset($query_devices) && isset($query_lines)){
-                $user_id = device_value_user($request_data_device['owner_id'], $account_db);
+                $user_id = device_value_user($request_data_device['owner_id'], $account_db,$conn);
 	       $sql = "UPDATE public.v_devices SET domain_uuid=".$account_uuid.", device_address='".$mac_address."', device_label='".$user_id ."', device_vendor='". $request_data_device['provision']['endpoint_brand'] ."', device_model='".$modelup ."', device_enabled=true, device_template='".$request_data_device['provision']['endpoint_brand'] . "/" . $modelup  ."', device_username='".$request_data_device['sip']['username']."', device_password='".$request_data_device['sip']['password']."' WHERE device_uuid='".$device_uuid ."' AND device_address='". $mac_address . "';";
 	 	
                 $sql_line_domain= "UPDATE public.v_device_lines set line_number='1',label='". $request_data_device['name'] ."', label='". $user_id ."' , display_name='". $user_id ."',user_id='". $request_data_device['sip']['username']."',auth_id='". $request_data_device['sip']['username'] ."', password='". $request_data_device['sip']['password'] ."', server_address='". $sip_domain . "'  WHERE domain_uuid='". $account_couch_uuid  ."' AND device_uuid='". $device_uuid  ."' WHERE device_uuid='". $device_uuid  . "' AND device_line_uuid='". $query_lines ."';";
@@ -430,14 +430,14 @@ switch($brand){
                 
 // file_put_contents("/var/www/html/webhook-data.log",$device_key_type_ck, FILE_APPEND);
                 if($device_key_type_ck === "personal parking"){
-		$user_id = device_value_user($device_key_value_ck, $account_db);
+		$user_id = device_value_user($device_key_value_ck, $account_db, $conn);
 		$sql_lines_placeholder_ck[$i] = "INSERT INTO public.v_device_keys (domain_uuid, device_key_uuid, device_uuid, device_key_id, device_key_category, device_key_vendor, device_key_type, device_key_subtype, device_key_line, device_key_value, device_key_extension,  device_key_label) VALUES(".$account_couch_uuid.", '".trim(file_get_contents('/proc/sys/kernel/random/uuid'))."', (SELECT device_uuid FROM public.v_devices WHERE device_address='".$request_data_device['mac_address']."'),'".$device_key_id_ck."' , 'line', '".$request_data_device['provision']['endpoint_brand']."', (select value from public.v_device_vendor_functions where device_vendor_uuid=(select device_vendor_uuid from public.v_device_vendors where name='". $request_data_device['provision']['endpoint_brand'] ."') and type=(SELECT value FROM public.v_device_vendor_functions where device_vendor_uuid=(select device_vendor_uuid from v_device_vendors where name='yealink') and type='none')) , '', '".$device_key_line_ck."', '', '', '');";
 		$sql_lines_ck[$i] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$call_park."' , device_key_line='".$device_key_line_ck."', device_key_value='*3".$user_id."', device_key_label='".$device_key_label_ck."' WHERE device_uuid='".$device_uuid."'  and  device_key_category='line' and device_key_type='".$none."' and device_key_id='".$device_key_id_ck."' ;"; 
                 //$cmd = "sudo psql -d   $dbconn  << EOF \n " .  $sql_lines_ck[$i]  . " \n" . 'EOF' . "\n" ;
                  shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_lines_ck[$i] . '"'  );
                 } 
                 else if($device_key_type_ck === "parking"){	
-		$user_id = device_value_user($device_key_value_ck, $account_db);
+		$user_id = device_value_user($device_key_value_ck, $account_db, $conn);
                 $sql_lines_placeholder_ck[$i] = "INSERT INTO public.v_device_keys (domain_uuid, device_key_uuid, device_uuid, device_key_id, device_key_category, device_key_vendor, device_key_type, device_key_subtype, device_key_line, device_key_value, device_key_extension,  device_key_label) VALUES(".$account_couch_uuid.", '".trim(file_get_contents('/proc/sys/kernel/random/uuid'))."', (SELECT device_uuid FROM public.v_devices WHERE device_address='".$request_data_device['mac_address']."'),'".$device_key_id_ck."' , 'line', '".$request_data_device['provision']['endpoint_brand']."', (select value from public.v_device_vendor_functions where device_vendor_uuid=(select device_vendor_uuid from public.v_device_vendors where name='". $request_data_device['provision']['endpoint_brand'] ."') and type='none'), '', '".$device_key_line_ck."', '', '', '');";		//$sql_lines_fk[$j] = "UPDATE public.v_device_keys SET domain_uuid='".$account_uuid."', device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_id='".$device_key_id_ck."', device_key_category='memory', device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$device_key_type_ck."' , device_key_line='".$device_key_line_fk."', device_key_value='".$device_key_value_fk."' WHERE device_uuid='". $device_uuid. "';";
                 $sql_lines_ck[$i] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='". $call_park ."' , device_key_line='".$device_key_line_ck."', device_key_value='*3".$device_key_value_ck."', device_key_label='".$device_key_label_ck."' WHERE device_uuid='".$device_uuid."'  and  device_key_category='line' and device_key_type='".$none."' and device_key_id='".$device_key_id_ck."' ;"; 
                 // $cmd = "sudo psql -d   $dbconn  << EOF \n " .  $sql_lines_ck[$i]  . " \n" . 'EOF' . "\n" ;
@@ -445,7 +445,7 @@ switch($brand){
                 shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_lines_ck[$i] . '"'  );
                 }
                 else if ($device_key_type_ck === 'transfer'){
-		$user_id = device_value_user($device_key_value_ck, $account_db);
+		$user_id = device_value_user($device_key_value_ck, $account_db, $conn);
                 $sql_lines_placeholder_ck[$i] = "INSERT INTO public.v_device_keys (domain_uuid, device_key_uuid, device_uuid, device_key_id, device_key_category, device_key_vendor, device_key_type, device_key_subtype, device_key_line, device_key_value, device_key_extension,  device_key_label) VALUES(".$account_couch_uuid.", '".trim(file_get_contents('/proc/sys/kernel/random/uuid'))."', (SELECT device_uuid FROM public.v_devices WHERE device_address='".$request_data_device['mac_address']."'),'".$device_key_id_ck."' , 'line', '".$request_data_device['provision']['endpoint_brand']."', (select value from public.v_device_vendor_functions where device_vendor_uuid=(select device_vendor_uuid from public.v_device_vendors where name='". $request_data_device['provision']['endpoint_brand'] ."') and type='none'), '', '".$device_key_line_ck."', '', '', '');";		//$sql_lines_fk[$j] = "UPDATE public.v_device_keys SET domain_uuid='".$account_uuid."', device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_id='".$device_key_id_ck."', device_key_category='memory', device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$device_key_type_fk."' , device_key_line='".$device_key_line_fk."', device_key_value='".$device_key_value_fk."' WHERE device_uuid='". $device_uuid. "';";
                 $sql_lines_ck[$i] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$transfer ."' , device_key_line='".$device_key_line_ck."', device_key_value='".$user_id."', device_key_label='".$device_key_label_ck."' WHERE device_uuid='".$device_uuid."' and  device_key_category='line' and device_key_type='". $none ."' and device_key_id='".$device_key_id_ck."' ;"; 
                 //                 $cmd = "sudo psql -d   $dbconn  << EOF \n " .  $sql_lines_ck[$i]  . " \n" . 'EOF' . "\n" ;
@@ -454,7 +454,7 @@ switch($brand){
                  
                 }
                 else if ($device_key_type_ck === 'call return'){
-		$user_id = device_value_user($device_key_value_ck, $account_db);
+		$user_id = device_value_user($device_key_value_ck, $account_db, $conn);
                 $sql_lines_placeholder_ck[$i] = "INSERT INTO public.v_device_keys (domain_uuid, device_key_uuid, device_uuid, device_key_id, device_key_category, device_key_vendor, device_key_type, device_key_subtype, device_key_line, device_key_value, device_key_extension,  device_key_label) VALUES(".$account_couch_uuid.", '".trim(file_get_contents('/proc/sys/kernel/random/uuid'))."', (SELECT device_uuid FROM public.v_devices WHERE device_address='".$request_data_device['mac_address']."'),'".$device_key_id_ck."' , 'line', '".$request_data_device['provision']['endpoint_brand']."', (select value from public.v_device_vendor_functions where device_vendor_uuid=(select device_vendor_uuid from public.v_device_vendors where name='". $request_data_device['provision']['endpoint_brand'] ."') and type='none'), '', '".$device_key_line_ck."', '', '', '');";		//$sql_lines_fk[$j] = "UPDATE public.v_device_keys SET domain_uuid='".$account_uuid."', device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_id='".$device_key_id_ck."', device_key_category='memory', device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$device_key_type_fk."' , device_key_line='".$device_key_line_fk."', device_key_value='".$device_key_value_fk."' WHERE device_uuid='". $device_uuid. "';";
                 $sql_lines_ck[$i] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$call_return ."' , device_key_line='".$device_key_line_ck."', device_key_value='".$user_id."', device_key_label='".$device_key_label_ck."' WHERE device_uuid='".$device_uuid."' and  device_key_category='line' and device_key_type='". $none ."' and device_key_id='".$device_key_id_ck."' ;"; 
                 //                 $cmd = "sudo psql -d   $dbconn  << EOF \n " .  $sql_lines_ck[$i]  . " \n" . 'EOF' . "\n" ;
@@ -463,7 +463,7 @@ switch($brand){
                  
                 }
                 else if ($device_key_type_ck === 'presence'){
-		$user_id = device_value_user($device_key_value_ck, $account_db);
+		$user_id = device_value_user($device_key_value_ck, $account_db, $conn);
                 $sql_lines_placeholder_ck[$i] = "INSERT INTO public.v_device_keys (domain_uuid, device_key_uuid, device_uuid, device_key_id, device_key_category, device_key_vendor, device_key_type, device_key_subtype, device_key_line, device_key_value, device_key_extension,  device_key_label) VALUES(".$account_couch_uuid.", '".trim(file_get_contents('/proc/sys/kernel/random/uuid'))."', (SELECT device_uuid FROM public.v_devices WHERE device_address='".$request_data_device['mac_address']."'),'".$device_key_id_ck."' , 'line', '".$request_data_device['provision']['endpoint_brand']."', (select value from public.v_device_vendor_functions where device_vendor_uuid=(select device_vendor_uuid from public.v_device_vendors where name='". $request_data_device['provision']['endpoint_brand'] ."') and type='none'), '', '".$device_key_line_ck."', '', '', '');";		//$sql_lines_fk[$j] = "UPDATE public.v_device_keys SET domain_uuid='".$account_uuid."', device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_id='".$device_key_id_ck."', device_key_category='memory', device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$device_key_type_fk."' , device_key_line='".$device_key_line_fk."', device_key_value='".$device_key_value_fk."' WHERE device_uuid='". $device_uuid. "';";
                 $sql_lines_ck[$i] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$presence."' , device_key_line='".$device_key_line_ck."', device_key_value='".$user_id."', device_key_label='".$device_key_label_ck."' WHERE device_uuid='".$device_uuid."' and  device_key_category='line' and device_key_type='". $none ."' and device_key_id='".$device_key_id_ck."' ;"; 
                 //                 $cmd = "sudo psql -d   $dbconn  << EOF \n " .  $sql_lines_ck[$i]  . " \n" . 'EOF' . "\n" ;
@@ -472,7 +472,7 @@ switch($brand){
                  
                 }
                 else if($device_key_type_ck === "speed dial"){
-		$user_id = device_value_user($device_key_value_ck, $account_db);
+		$user_id = device_value_user($device_key_value_ck, $account_db, $conn);
                 $sql_lines_placeholder_ck[$i] = "INSERT INTO public.v_device_keys (domain_uuid, device_key_uuid, device_uuid, device_key_id, device_key_category, device_key_vendor, device_key_type, device_key_subtype, device_key_line, device_key_value, device_key_extension,  device_key_label) VALUES(".$account_couch_uuid.", '".trim(file_get_contents('/proc/sys/kernel/random/uuid'))."', (SELECT device_uuid FROM public.v_devices WHERE device_address='".$request_data_device['mac_address']."'),'".$device_key_id_ck."' , 'line', '".$request_data_device['provision']['endpoint_brand']."', (select value from public.v_device_vendor_functions where device_vendor_uuid=(select device_vendor_uuid from public.v_device_vendors where name='". $request_data_device['provision']['endpoint_brand'] ."') and type='none'), '', '".$device_key_line_ck."', '', '', '');";		//$sql_lines_fk[$j] = "UPDATE public.v_device_keys SET domain_uuid='".$account_uuid."', device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_id='".$device_key_id_fk."', device_key_category='memory', device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$device_key_type_fk."' , device_key_line='".$device_key_line_fk."', device_key_value='".$device_key_value_fk."' WHERE device_uuid='". $device_uuid. "';";  
                 $sql_lines_ck[$i] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$speed_dial."' , device_key_line='".$device_key_line_ck."', device_key_value='".$device_key_value_ck."', device_key_label='".$device_key_label_ck."' WHERE device_uuid='".$device_uuid."'  and  device_key_category='line' and device_key_type='".$none."' and device_key_id='".$device_key_id_ck."' ;"; 
 //                file_put_contents("/var/www/html/webhook-data.log",print_r($sql_lines_ck, FILE_APPEND));
@@ -480,7 +480,7 @@ switch($brand){
 
                 
                 } else if($device_key_type_ck === "line"){
-		$user_id = device_value_user($device_key_value_ck, $account_db);
+		$user_id = device_value_user($device_key_value_ck, $account_db, $conn);
                 $sql_lines_placeholder_ck[$i] = "INSERT INTO public.v_device_keys (domain_uuid, device_key_uuid, device_uuid, device_key_id, device_key_category, device_key_vendor, device_key_type, device_key_subtype, device_key_line, device_key_value, device_key_extension,  device_key_label) VALUES(".$account_couch_uuid.", '".trim(file_get_contents('/proc/sys/kernel/random/uuid'))."', (SELECT device_uuid FROM public.v_devices WHERE device_address='".$request_data_device['mac_address']."'),'".$device_key_id_ck."' , 'line', '".$request_data_device['provision']['endpoint_brand']."', (select value from public.v_device_vendor_functions where device_vendor_uuid=(select device_vendor_uuid from public.v_device_vendors where name='". $request_data_device['provision']['endpoint_brand'] ."') and type=(SELECT value FROM public.v_device_vendor_functions where device_vendor_uuid=(select device_vendor_uuid from v_device_vendors where name='yealink') and type='none')) , '', '".$device_key_line_ck."', '', '', '');";		//$sql_lines_fk[$j] = "UPDATE public.v_device_keys SET domain_uuid='".$account_uuid."', device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_id='".$device_key_id_fk."', device_key_category='memory', device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$device_key_type_fk."' , device_key_line='".$device_key_line_fk."', device_key_value='".$device_key_value_fk."' WHERE device_uuid='". $device_uuid. "';";  
                 $sql_lines_ck[$i] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$lineline."' , device_key_line='".$device_key_line_ck."', device_key_value='' WHERE device_uuid='".$device_uuid."'  and  device_key_category='line' and device_key_type='".$none."' and device_key_id='".$device_key_id_ck."' ;"; 
 //                file_put_contents("/var/www/html/webhook-data.log",print_r($sql_lines_ck, FILE_APPEND));
@@ -511,14 +511,14 @@ switch($brand){
 		$device_key_id_none_fk = $key_none_fk[$j];
 
                   if($device_key_type_fk === "personal parking"){
-		$user_id = device_value_user($device_key_value_fk, $account_db);
+		$user_id = device_value_user($device_key_value_fk, $account_db, $conn);
 		$sql_lines_placeholder_ck[$i] = "INSERT INTO public.v_device_keys (domain_uuid, device_key_uuid, device_uuid, device_key_id, device_key_category, device_key_vendor, device_key_type, device_key_subtype, device_key_line, device_key_value, device_key_extension,  device_key_label) VALUES(".$account_couch_uuid.", '".trim(file_get_contents('/proc/sys/kernel/random/uuid'))."', (SELECT device_uuid FROM public.v_devices WHERE device_address='".$request_data_device['mac_address']."'),'".$device_key_id_fk."' , 'line', '".$request_data_device['provision']['endpoint_brand']."', (select value from public.v_device_vendor_functions where device_vendor_uuid=(select device_vendor_uuid from public.v_device_vendors where name='". $request_data_device['provision']['endpoint_brand'] ."') and type=(SELECT value FROM public.v_device_vendor_functions where device_vendor_uuid=(select device_vendor_uuid from v_device_vendors where name='yealink') and type='none')) , '', '".$device_key_line_ck."', '', '', '');";
 		$sql_lines_fk[$j] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$call_park."' , device_key_line='".$device_key_line_fk."', device_key_value='*3".$user_id."'  WHERE device_uuid='".$device_uuid."'  and  device_key_category='memory' and device_key_type='".$none."' and device_key_id='".$device_key_id_fk."' ;"; 
                 //$cmd = "sudo psql -d   $dbconn  << EOF \n " .  $sql_lines_ck[$i]  . " \n" . 'EOF' . "\n" ;
                  shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_lines_fk[$j] . '"'  );
                 } 
                 else if($device_key_type_fk === "parking"){	
-		$user_id = device_value_user($device_key_value_fk, $account_db);
+		$user_id = device_value_user($device_key_value_fk, $account_db, $conn);
                 $sql_lines_placeholder_ck[$i] = "INSERT INTO public.v_device_keys (domain_uuid, device_key_uuid, device_uuid, device_key_id, device_key_category, device_key_vendor, device_key_type, device_key_subtype, device_key_line, device_key_value, device_key_extension,  device_key_label) VALUES(".$account_couch_uuid.", '".trim(file_get_contents('/proc/sys/kernel/random/uuid'))."', (SELECT device_uuid FROM public.v_devices WHERE device_address='".$request_data_device['mac_address']."'),'".$device_key_id_fk."' , 'line', '".$request_data_device['provision']['endpoint_brand']."', (select value from public.v_device_vendor_functions where device_vendor_uuid=(select device_vendor_uuid from public.v_device_vendors where name='". $request_data_device['provision']['endpoint_brand'] ."') and type='none'), '', '".$device_key_line_fk."', '', '', '');";		//$sql_lines_fk[$j] = "UPDATE public.v_device_keys SET domain_uuid='".$account_uuid."', device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_id='".$device_key_id_ck."', device_key_category='memory', device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$device_key_type_ck."' , device_key_line='".$device_key_line_fk."', device_key_value='".$device_key_value_fk."' WHERE device_uuid='". $device_uuid. "';";
                 $sql_lines_fk[$j] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='". $call_park ."' , device_key_line='".$device_key_line_fk."', device_key_value='*3".$device_key_value_fk."' WHERE device_uuid='".$device_uuid."'  and  device_key_category='memory' and device_key_type='".$none."' and device_key_id='".$device_key_id_fk."' ;"; 
                 // $cmd = "sudo psql -d   $dbconn  << EOF \n " .  $sql_lines_fk[$i]  . " \n" . 'EOF' . "\n" ;
@@ -526,7 +526,7 @@ switch($brand){
                 shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_lines_fk[$j] . '"'  );
                 }
                 else if ($device_key_type_fk === 'call return'){
-		$user_id = device_value_user($device_key_value_fk, $account_db);
+		$user_id = device_value_user($device_key_value_fk, $account_db, $conn);
                 $sql_lines_placeholder_ck[$i] = "INSERT INTO public.v_device_keys (domain_uuid, device_key_uuid, device_uuid, device_key_id, device_key_category, device_key_vendor, device_key_type, device_key_subtype, device_key_line, device_key_value, device_key_extension,  device_key_label) VALUES(".$account_couch_uuid.", '".trim(file_get_contents('/proc/sys/kernel/random/uuid'))."', (SELECT device_uuid FROM public.v_devices WHERE device_address='".$request_data_device['mac_address']."'),'".$device_key_id_fk."' , 'line', '".$request_data_device['provision']['endpoint_brand']."', (select value from public.v_device_vendor_functions where device_vendor_uuid=(select device_vendor_uuid from public.v_device_vendors where name='". $request_data_device['provision']['endpoint_brand'] ."') and type='none'), '', '".$device_key_line_fk."', '', '', '');";		//$sql_lines_fk[$j] = "UPDATE public.v_device_keys SET domain_uuid='".$account_uuid."', device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_id='".$device_key_id_ck."', device_key_category='memory', device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$device_key_type_fk."' , device_key_line='".$device_key_line_fk."', device_key_value='".$device_key_value_fk."' WHERE device_uuid='". $device_uuid. "';";
                 $sql_lines_fk[$j] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$call_return  ."' , device_key_line='".$device_key_line_fk."', device_key_value='".$user_id."' WHERE device_uuid='".$device_uuid."' and  device_key_category='memory' and device_key_type='". $none ."' and device_key_id='".$device_key_id_fk."' ;"; 
                 //                 $cmd = "sudo psql -d   $dbconn  << EOF \n " .  $sql_lines_ck[$i]  . " \n" . 'EOF' . "\n" ;
@@ -535,7 +535,7 @@ switch($brand){
                  
                 }
                 else if ($device_key_type_fk === 'transfer'){
-		$user_id = device_value_user($device_key_value_fk, $account_db);
+		$user_id = device_value_user($device_key_value_fk, $account_db, $conn);
                 $sql_lines_placeholder_ck[$i] = "INSERT INTO public.v_device_keys (domain_uuid, device_key_uuid, device_uuid, device_key_id, device_key_category, device_key_vendor, device_key_type, device_key_subtype, device_key_line, device_key_value, device_key_extension,  device_key_label) VALUES(".$account_couch_uuid.", '".trim(file_get_contents('/proc/sys/kernel/random/uuid'))."', (SELECT device_uuid FROM public.v_devices WHERE device_address='".$request_data_device['mac_address']."'),'".$device_key_id_fk."' , 'line', '".$request_data_device['provision']['endpoint_brand']."', (select value from public.v_device_vendor_functions where device_vendor_uuid=(select device_vendor_uuid from public.v_device_vendors where name='". $request_data_device['provision']['endpoint_brand'] ."') and type='none'), '', '".$device_key_line_fk."', '', '', '');";		//$sql_lines_fk[$j] = "UPDATE public.v_device_keys SET domain_uuid='".$account_uuid."', device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_id='".$device_key_id_ck."', device_key_category='memory', device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$device_key_type_fk."' , device_key_line='".$device_key_line_fk."', device_key_value='".$device_key_value_fk."' WHERE device_uuid='". $device_uuid. "';";
                 $sql_lines_fk[$j] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$transfer ."' , device_key_line='".$device_key_line_fk."', device_key_value='".$user_id."' WHERE device_uuid='".$device_uuid."' and  device_key_category='memory' and device_key_type='". $none ."' and device_key_id='".$device_key_id_fk."' ;"; 
                 //                 $cmd = "sudo psql -d   $dbconn  << EOF \n " .  $sql_lines_ck[$i]  . " \n" . 'EOF' . "\n" ;
@@ -544,7 +544,7 @@ switch($brand){
                  
                 }
                 else if ($device_key_type_fk === 'presence'){
-		$user_id = device_value_user($device_key_value_fk, $account_db);
+		$user_id = device_value_user($device_key_value_fk, $account_db, $conn);
                 $sql_lines_placeholder_ck[$i] = "INSERT INTO public.v_device_keys (domain_uuid, device_key_uuid, device_uuid, device_key_id, device_key_category, device_key_vendor, device_key_type, device_key_subtype, device_key_line, device_key_value, device_key_extension,  device_key_label) VALUES(".$account_couch_uuid.", '".trim(file_get_contents('/proc/sys/kernel/random/uuid'))."', (SELECT device_uuid FROM public.v_devices WHERE device_address='".$request_data_device['mac_address']."'),'".$device_key_id_fk."' , 'line', '".$request_data_device['provision']['endpoint_brand']."', (select value from public.v_device_vendor_functions where device_vendor_uuid=(select device_vendor_uuid from public.v_device_vendors where name='". $request_data_device['provision']['endpoint_brand'] ."') and type='none'), '', '".$device_key_line_fk."', '', '', '');";		//$sql_lines_fk[$j] = "UPDATE public.v_device_keys SET domain_uuid='".$account_uuid."', device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_id='".$device_key_id_ck."', device_key_category='memory', device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$device_key_type_fk."' , device_key_line='".$device_key_line_fk."', device_key_value='".$device_key_value_fk."' WHERE device_uuid='". $device_uuid. "';";
                 $sql_lines_fk[$j] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$presence."' , device_key_line='".$device_key_line_fk."', device_key_value='".$user_id."' WHERE device_uuid='".$device_uuid."' and  device_key_category='memory' and device_key_type='". $none ."' and device_key_id='".$device_key_id_fk."' ;"; 
                 //                 $cmd = "sudo psql -d   $dbconn  << EOF \n " .  $sql_lines_ck[$i]  . " \n" . 'EOF' . "\n" ;
@@ -553,7 +553,7 @@ switch($brand){
                  
                 }
                 else if($device_key_type_fk === "speed dial"){
-		$user_id = device_value_user($device_key_value_fk, $account_db);
+		$user_id = device_value_user($device_key_value_fk, $account_db, $conn);
                 $sql_lines_placeholder_ck[$i] = "INSERT INTO public.v_device_keys (domain_uuid, device_key_uuid, device_uuid, device_key_id, device_key_category, device_key_vendor, device_key_type, device_key_subtype, device_key_line, device_key_value, device_key_extension,  device_key_label) VALUES(".$account_couch_uuid.", '".trim(file_get_contents('/proc/sys/kernel/random/uuid'))."', (SELECT device_uuid FROM public.v_devices WHERE device_address='".$request_data_device['mac_address']."'),'".$device_key_id_fk."' , 'line', '".$request_data_device['provision']['endpoint_brand']."', (select value from public.v_device_vendor_functions where device_vendor_uuid=(select device_vendor_uuid from public.v_device_vendors where name='". $request_data_device['provision']['endpoint_brand'] ."') and type='none'), '', '".$device_key_line_fk."', '', '', '');";		//$sql_lines_fk[$j] = "UPDATE public.v_device_keys SET domain_uuid='".$account_uuid."', device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_id='".$device_key_id_fk."', device_key_category='memory', device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$device_key_type_fk."' , device_key_line='".$device_key_line_fk."', device_key_value='".$device_key_value_fk."' WHERE device_uuid='". $device_uuid. "';";  
                 $sql_lines_fk[$j] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$speed_dial."' , device_key_line='".$device_key_line_fk."', device_key_value='".$device_key_value_fk."' WHERE device_uuid='".$device_uuid."'  and  device_key_category='memory' and device_key_type='".$none."' and device_key_id='".$device_key_id_fk."' ;"; 
 //                file_put_contents("/var/www/html/webhook-data.log",print_r($sql_lines_fk, FILE_APPEND));
@@ -561,7 +561,7 @@ switch($brand){
 
                 
                 } else if($device_key_type_fk === "line"){
-		$user_id = device_value_user($device_key_value_fk, $account_db);
+		$user_id = device_value_user($device_key_value_fk, $account_db, $conn);
                 $sql_lines_placeholder_ck[$i] = "INSERT INTO public.v_device_keys (domain_uuid, device_key_uuid, device_uuid, device_key_id, device_key_category, device_key_vendor, device_key_type, device_key_subtype, device_key_line, device_key_value, device_key_extension,  device_key_label) VALUES(".$account_couch_uuid.", '".trim(file_get_contents('/proc/sys/kernel/random/uuid'))."', (SELECT device_uuid FROM public.v_devices WHERE device_address='".$request_data_device['mac_address']."'),'".$device_key_id_fk."' , 'line', '".$request_data_device['provision']['endpoint_brand']."', (select value from public.v_device_vendor_functions where device_vendor_uuid=(select device_vendor_uuid from public.v_device_vendors where name='". $request_data_device['provision']['endpoint_brand'] ."') and type=(SELECT value FROM public.v_device_vendor_functions where device_vendor_uuid=(select device_vendor_uuid from v_device_vendors where name='yealink') and type='none')) , '', '".$device_key_line_ck."', '', '', '');";		//$sql_lines_fk[$j] = "UPDATE public.v_device_keys SET domain_uuid='".$account_uuid."', device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_id='".$device_key_id_fk."', device_key_category='memory', device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$device_key_type_fk."' , device_key_line='".$device_key_line_fk."', device_key_value='".$device_key_value_fk."' WHERE device_uuid='". $device_uuid. "';";  
                 $sql_lines_fk[$j] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$lineline."' , device_key_line='".$device_key_line_fk."', device_key_value='' WHERE device_uuid='".$device_uuid."'  and  device_key_category='memory' and device_key_type='".$none."' and device_key_id='".$device_key_id_fk."' ;"; 
 //                file_put_contents("/var/www/html/webhook-data.log",print_r($sql_lines_fk, FILE_APPEND));
@@ -591,42 +591,42 @@ switch($brand){
                 
 
                 if($device_key_type_ek === "personal parking"){
-		$user_id = device_value_user($device_key_value_ek, $account_db);
+		$user_id = device_value_user($device_key_value_ek, $account_db, $conn);
 		$sql_lines_ek[$i] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$call_park."' , device_key_line='".$device_key_line_ek."', device_key_value='*3".$user_id."', device_key_label='".$device_key_label_ek."' WHERE device_uuid='".$device_uuid."'  and  device_key_category='expansion' and device_key_type='".$none."' and device_key_id='".$device_key_id_ek."' ;"; 
                 shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_lines_ek[$k] . '"'  );
                 } 
                 else if($device_key_type_ek === "parking"){	
-		$user_id = device_value_user($device_key_value_ek, $account_db);
+		$user_id = device_value_user($device_key_value_ek, $account_db, $conn);
                 $sql_lines_ek[$k] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='". $call_park ."' , device_key_line='".$device_key_line_ek."', device_key_value='*3".$device_key_value_ek."', device_key_label='".$device_key_label_ek."' WHERE device_uuid='".$device_uuid."'  and  device_key_category='expansion' and device_key_type='".$none."' and device_key_id='".$device_key_id_ek."' ;"; 
                 shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_lines_ek[$k] . '"'  );
                 }
                 else if ($device_key_type_ek === 'transfer'){
-		$user_id = device_value_user($device_key_value_ek, $account_db);
+		$user_id = device_value_user($device_key_value_ek, $account_db, $conn);
                 $sql_lines_ek[$k] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$transfer ."' , device_key_line='".$device_key_line_ek."', device_key_value='".$user_id."', device_key_label='".$device_key_label_ek."' WHERE device_uuid='".$device_uuid."' and  device_key_category='expansion' and device_key_type='". $none ."' and device_key_id='".$device_key_id_ek."' ;"; 
                 shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_lines_ek[$k] . '"'  );
                  
                 }
                 else if ($device_key_type_ek === 'call return'){
-		$user_id = device_value_user($device_key_value_ek, $account_db);
+		$user_id = device_value_user($device_key_value_ek, $account_db, $conn);
                 $sql_lines_ek[$k] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$call_return ."' , device_key_line='".$device_key_line_ek."', device_key_value='".$user_id."', device_key_label='".$device_key_label_ek."' WHERE device_uuid='".$device_uuid."' and  device_key_category='expansion' and device_key_type='". $none ."' and device_key_id='".$device_key_id_ek."' ;"; 
                 shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_lines_ek[$k] . '"'  );
                  
                 }
                 else if ($device_key_type_ek === 'presence'){
-		$user_id = device_value_user($device_key_value_ek, $account_db);
+		$user_id = device_value_user($device_key_value_ek, $account_db, $conn);
                 $sql_lines_ek[$k] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$presence."' , device_key_line='".$device_key_line_ek."', device_key_value='".$user_id."', device_key_label='".$device_key_label_ek."' WHERE device_uuid='".$device_uuid."' and  device_key_category='expansion' and device_key_type='". $none ."' and device_key_id='".$device_key_id_ek."' ;"; 
                 shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_lines_ek[$k] . '"'  );
                  
                 }
                 else if($device_key_type_ek === "speed dial"){
-		$user_id = device_value_user($device_key_value_ek, $account_db);
+		$user_id = device_value_user($device_key_value_ek, $account_db, $conn);
                 $sql_lines_ek[$k] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$speed_dial."' , device_key_line='".$device_key_line_ek."', device_key_value='".$device_key_value_ek."', device_key_label='".$device_key_label_ek."' WHERE device_uuid='".$device_uuid."'  and  device_key_category='line' and device_key_type='".$none."' and device_key_id='".$device_key_id_ek."' ;"; 
 //                file_put_contents("/var/www/html/webhook-data.log",print_r($sql_lines_ck, FILE_APPEND));
                                 shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_lines_ek[$k] . '"'  );
 
                 
                 } else if($device_key_type_ek === "line"){
-		$user_id = device_value_user($device_key_value_ek, $account_db);
+		$user_id = device_value_user($device_key_value_ek, $account_db, $conn);
                 $sql_lines_ek[$k] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$lineline."' , device_key_line='".$device_key_line_ek."', device_key_value='' WHERE device_uuid='".$device_uuid."'  and  device_key_category='line' and device_key_type='".$none."' and device_key_id='".$device_key_id_ek."' ;"; 
 
                                 shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_lines_ek[$k] . '"'  );
@@ -653,42 +653,42 @@ switch($brand){
                 
 
                 if($device_key_type_pk === "personal parking"){
-		$user_id = device_value_user($device_key_value_pk, $account_db);
+		$user_id = device_value_user($device_key_value_pk, $account_db, $conn);
 		$sql_lines_pk[$l] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$call_park."' , device_key_line='".$device_key_line_pk."', device_key_value='*3".$user_id."', device_key_label='".$device_key_label_pk."' WHERE device_uuid='".$device_uuid."'  and  device_key_category='programmable' and device_key_type='".$none."' and device_key_id='".$device_key_id_pk."' ;"; 
                 shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_lines_pk[$l] . '"'  );
                 } 
                 else if($device_key_type_pk === "parking"){	
-		$user_id = device_value_user($device_key_value_pk, $account_db);
+		$user_id = device_value_user($device_key_value_pk, $account_db, $conn);
                 $sql_lines_pk[$l] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='". $call_park ."' , device_key_line='".$device_key_line_pk."', device_key_value='*3".$device_key_value_pk."', device_key_label='".$device_key_label_pk."' WHERE device_uuid='".$device_uuid."'  and  device_key_category='programmable' and device_key_type='".$none."' and device_key_id='".$device_key_id_pk."' ;"; 
                 shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_lines_pk[$l] . '"'  );
                 }
                 else if ($device_key_type_pk === 'transfer'){
-		$user_id = device_value_user($device_key_value_pk, $account_db);
+		$user_id = device_value_user($device_key_value_pk, $account_db, $conn);
                 $sql_lines_pk[$l] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$transfer ."' , device_key_line='".$device_key_line_pk."', device_key_value='".$user_id."', device_key_label='".$device_key_label_pk."' WHERE device_uuid='".$device_uuid."' and  device_key_category='programmable' and device_key_type='". $none ."' and device_key_id='".$device_key_id_pk."' ;"; 
                 shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_lines_pk[$l] . '"'  );
                  
                 }
                 else if ($device_key_type_pk === 'call return'){
-		$user_id = device_value_user($device_key_value_pk, $account_db);
+		$user_id = device_value_user($device_key_value_pk, $account_db, $conn);
                 $sql_lines_pk[$l] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$call_return ."' , device_key_line='".$device_key_line_pk."', device_key_value='".$user_id."', device_key_label='".$device_key_label_pk."' WHERE device_uuid='".$device_uuid."' and  device_key_category='programmable' and device_key_type='". $none ."' and device_key_id='".$device_key_id_pk."' ;"; 
                 shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_lines_pk[$l] . '"'  );
                  
                 }
                 else if ($device_key_type_pk === 'presence'){
-		$user_id = device_value_user($device_key_value_pk, $account_db);
+		$user_id = device_value_user($device_key_value_pk, $account_db, $conn);
                 $sql_lines_pk[$l] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$presence."' , device_key_line='".$device_key_line_pk."', device_key_value='".$user_id."', device_key_label='".$device_key_label_pk."' WHERE device_uuid='".$device_uuid."' and  device_key_category='programmable' and device_key_type='". $none ."' and device_key_id='".$device_key_id_pk."' ;"; 
                 shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_lines_pk[$l] . '"'  );
                  
                 }
                 else if($device_key_type_pk === "speed dial"){
-		$user_id = device_value_user($device_key_value_pk, $account_db);
+		$user_id = device_value_user($device_key_value_pk, $account_db, $conn);
                 $sql_lines_pk[$l] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$speed_dial."' , device_key_line='".$device_key_line_pk."', device_key_value='".$device_key_value_pk."', device_key_label='".$device_key_label_pk."' WHERE device_uuid='".$device_uuid."'  and  device_key_category='programmable' and device_key_type='".$none."' and device_key_id='".$device_key_id_pk."' ;"; 
 //                file_put_contents("/var/www/html/webhook-data.log",print_r($sql_lines_ck, FILE_APPEND));
                                 shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_lines_pk[$l] . '"'  );
 
                 
                 } else if($device_key_type_pk === "line"){
-		$user_id = device_value_user($device_key_value_pk, $account_db);
+		$user_id = device_value_user($device_key_value_pk, $account_db, $conn);
                 $sql_lines_pk[$l] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$lineline."' , device_key_line='".$device_key_line_pk."', device_key_value='' WHERE device_uuid='".$device_uuid."'  and  device_key_category='line' and device_key_type='".$none."' and device_key_id='".$device_key_id_pk."' ;"; 
 
                                 shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_lines_pk[$l] . '"'  );
