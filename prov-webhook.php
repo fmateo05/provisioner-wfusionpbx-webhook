@@ -1,5 +1,9 @@
 <?php
 
+define('__ROOT__', dirname(dirname(__FILE__)));
+
+require_once(__ROOT__.'/env.php');
+
 
 $json = json_decode(file_get_contents("php://input"),true);
 
@@ -32,12 +36,7 @@ function _get_account_db($account_id) {
 $account_db = str_replace('/','%2F',_get_account_db($account_id));
 
 
-$couch_user = '';
-$couch_pass = '';
-$couch_host = '';
-$couch_port = '15984';
 
-$conn = "http://" . $couch_user . ':' . $couch_pass . '@' . $couch_host . ':' . $couch_port ;
 //$conn = "http://" . $couch_user . ':' . $couch_pass . '@' . $couch_host . ':' . $couch_port ;
 $device = $device_id;
 
@@ -48,11 +47,6 @@ $result_dev = json_decode($document,true);
 
 function device_value_user($device_key_value,$account_db){
 
-
-$couch_user = '';
-$couch_pass = '';
-$couch_host = '';
-$couch_port = '15984';
 
 
 $conn = "http://" . $couch_user . ':' . $couch_pass . '@' . $couch_host . ':' . $couch_port ;
@@ -83,15 +77,15 @@ $request_data_device  = $result_dev;
 
 $other_uuid = trim(file_get_contents('/proc/sys/kernel/random/uuid'));
 
-$user = 'fusionpbx';
-$password = '';
-$host ='';
-$database ='fusionpbx';
+// $user = 'fusionpbx';
+// $password = '';
+// $host ='';
+// $database ='fusionpbx';
 
-$credentials = trim('Your-MD5-Creds');
-$otf_couch_host = 'callmgr1-z100.lxd';
-$otf_couch_port = '8000';
-$otf_conn = "http://" . $otf_couch_host . ':' . $otf_couch_port  . '/v2/';
+// $credentials = trim('Your-MD5-Creds');
+// $otf_couch_host = 'callmgr1-z100.lxd';
+// $otf_couch_port = '8000';
+// $otf_conn = "http://" . $otf_couch_host . ':' . $otf_couch_port  . '/v2/';
 
 
 $account_couchdb_id = $account_id;
@@ -292,6 +286,7 @@ switch($brand){
 	file_put_contents("/var/www/html/webhook-data.log",$sql_settings_prov_check, FILE_APPEND);
 	if(!isset($sql_settings_check)) { 
 	shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_settings_prov_enable . '"'  );
+	shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_settings_auth_type . '"'  );
         shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_settings_httpauth_enable . '"'  );
         shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_settings_httpauth_username . '"'  );
         shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_settings_httpauth_password . '"'  );
