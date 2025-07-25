@@ -653,7 +653,69 @@ switch($brand){
                     break ;
                 }
                 }
-               
+		$key_none_ek = range(0,($countfk - 1));
+		for($k = 0 ; $k < $countek ; $k++ ){
+                
+                 $device_key_type_ek = str_replace('_',' ',$request_data_device['provision']['combo_keys'][$alllinesek[$k]]['type']) ; 
+                
+
+                $device_key_value_ek = trim($request_data_device['provision']['combo_keys'][$alllinesck[$k]]['value']['value'])  ; 
+                
+                $device_key_label_ek = trim($request_data_device['provision']['combo_keys'][$alllinesck[$k]]['value']['label']);
+		 
+                $device_key_line_ek = '0';
+		
+		$device_key_id_ek = $alllinesek[$k] +1;
+		$device_key_id_none_ek = $key_none_ek[$k];
+                
+
+                if($device_key_type_ek === "personal parking"){
+		$user_id = device_value_user($device_key_value_ek, $account_db);
+		$sql_lines_ek[$i] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$call_park."' , device_key_line='".$device_key_line_ek."', device_key_value='*3".$user_id."', device_key_label='".$device_key_label_ek."' WHERE device_uuid='".$device_uuid."'  and  device_key_category='expansion' and device_key_type='".$none."' and device_key_id='".$device_key_id_ek."' ;"; 
+                shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_lines_ek[$k] . '"'  );
+                } 
+                else if($device_key_type_ek === "parking"){	
+		$user_id = device_value_user($device_key_value_ek, $account_db);
+                $sql_lines_ek[$k] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='". $call_park ."' , device_key_line='".$device_key_line_ek."', device_key_value='*3".$device_key_value_ek."', device_key_label='".$device_key_label_ek."' WHERE device_uuid='".$device_uuid."'  and  device_key_category='expansion' and device_key_type='".$none."' and device_key_id='".$device_key_id_ek."' ;"; 
+                shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_lines_ek[$k] . '"'  );
+                }
+                else if ($device_key_type_ek === 'transfer'){
+		$user_id = device_value_user($device_key_value_ek, $account_db);
+                $sql_lines_ek[$k] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$transfer ."' , device_key_line='".$device_key_line_ek."', device_key_value='".$user_id."', device_key_label='".$device_key_label_ek."' WHERE device_uuid='".$device_uuid."' and  device_key_category='expansion' and device_key_type='". $none ."' and device_key_id='".$device_key_id_ek."' ;"; 
+                shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_lines_ek[$k] . '"'  );
+                 
+                }
+                else if ($device_key_type_ek === 'call return'){
+		$user_id = device_value_user($device_key_value_ek, $account_db);
+                $sql_lines_ek[$k] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$call_return ."' , device_key_line='".$device_key_line_ek."', device_key_value='".$user_id."', device_key_label='".$device_key_label_ek."' WHERE device_uuid='".$device_uuid."' and  device_key_category='expansion' and device_key_type='". $none ."' and device_key_id='".$device_key_id_ek."' ;"; 
+                shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_lines_ek[$k] . '"'  );
+                 
+                }
+                else if ($device_key_type_ek === 'presence'){
+		$user_id = device_value_user($device_key_value_ek, $account_db);
+                $sql_lines_ek[$k] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$presence."' , device_key_line='".$device_key_line_ek."', device_key_value='".$user_id."', device_key_label='".$device_key_label_ek."' WHERE device_uuid='".$device_uuid."' and  device_key_category='expansion' and device_key_type='". $none ."' and device_key_id='".$device_key_id_ek."' ;"; 
+                shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_lines_ek[$k] . '"'  );
+                 
+                }
+                else if($device_key_type_ek === "speed dial"){
+		$user_id = device_value_user($device_key_value_ek, $account_db);
+                $sql_lines_ek[$k] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$speed_dial."' , device_key_line='".$device_key_line_ek."', device_key_value='".$device_key_value_ek."', device_key_label='".$device_key_label_ek."' WHERE device_uuid='".$device_uuid."'  and  device_key_category='line' and device_key_type='".$none."' and device_key_id='".$device_key_id_ek."' ;"; 
+//                file_put_contents("/var/www/html/webhook-data.log",print_r($sql_lines_ck, FILE_APPEND));
+                                shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_lines_ek[$k] . '"'  );
+
+                
+                } else if($device_key_type_ek === "line"){
+		$user_id = device_value_user($device_key_value_ek, $account_db);
+                $sql_lines_ek[$k] = "UPDATE public.v_device_keys SET domain_uuid=".$account_couch_uuid.", device_uuid=(SELECT device_uuid from public.v_devices WHERE device_address='".$request_data_device['mac_address']."'), device_key_vendor='".$request_data_device['provision']['endpoint_brand']."', device_key_type='".$lineline."' , device_key_line='".$device_key_line_ek."', device_key_value='' WHERE device_uuid='".$device_uuid."'  and  device_key_category='line' and device_key_type='".$none."' and device_key_id='".$device_key_id_ek."' ;"; 
+
+                                shell_exec("sudo psql -d " . '"' . $dbconn . '" -c ' . '"' . $sql_lines_ek[$k] . '"'  );
+
+                
+                }
+
+
+
+		
 
 
 		} else {
