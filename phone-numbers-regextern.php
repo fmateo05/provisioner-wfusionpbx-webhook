@@ -9,9 +9,9 @@ $account = "d18cae03a0203258af5e30aab6502e15"; // MASTER ACCOUNT
 $number_np = str_replace("+", "", $number);
 
 $kamusr = 'kamailio';
-$kampwd = 'your_secure_password';
-$kamhost = '10.171.91.5';
-$kamdb = 'kamailio-five';
+$kampwd = '';
+$kamhost = '';
+$kamdb = '';
 
 $dbconn_kamailio = "postgres://" . $kamusr . ':' . $kampwd . '@' .  $kamhost . '/' . $kamdb   ;
 
