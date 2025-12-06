@@ -12,3 +12,6 @@
 ### Pricing:
 **From US$ 120.**
 **If you need support or install; it might be variable accordingly with the amount of ip phones.**
+
+#### Succes installs :
+**40**
